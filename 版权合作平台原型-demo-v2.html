@@ -1,0 +1,2882 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DramaBox版权合作平台 — 原型</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Roboto, Arial, sans-serif; font-size: 14px; color: #303133; background: #f5f7fb; }
+    a { text-decoration: none; }
+    input, select, button { font-family: inherit; }
+
+    :root {
+        --pink: #fa2256;
+        --pink-dark: #e01547;
+        --pink-soft: #fdeff3;
+        --border: #ebeef5;
+        --text: #303133;
+        --text-2: #606266;
+        --text-3: #909399;
+        --green: #22c55e;
+        --orange: #ff8a1f;
+    }
+
+    .hidden { display: none !important; }
+
+    /* ============ 登录页 ============ */
+    .login-page { min-height: 100vh; position: relative; overflow: hidden;
+        background: #f7f8fc; }
+    .login-page::before { content: ''; position: absolute; width: 900px; height: 900px; right: -260px; top: -320px;
+        background: radial-gradient(circle at center, rgba(178,214,255,.45), rgba(247,248,252,0) 65%); }
+    .login-page::after { content: ''; position: absolute; width: 900px; height: 900px; left: -300px; bottom: -420px;
+        background: radial-gradient(circle at center, rgba(255,214,232,.5), rgba(247,248,252,0) 65%); }
+    .login-topbar { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; padding: 20px 28px; }
+    .login-brand { display: flex; align-items: center; gap: 10px; }
+    .login-brand .logo-mark { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg,#ff4d6d,#fa2256); display: flex; align-items: center; justify-content: center; }
+    .login-brand .logo-mark svg { width: 16px; height: 16px; }
+    .login-brand .logo-text { line-height: 1.1; }
+    .login-brand .logo-text b { font-size: 19px; letter-spacing: .2px; }
+    .login-brand .logo-text span { display: block; font-size: 8px; color: #909399; letter-spacing: .3px; }
+    .lang-switch { font-size: 13px; color: var(--text-2); cursor: pointer; }
+    .login-body { position: relative; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 120px; padding: 40px 60px 80px; flex-wrap: wrap; }
+    .login-intro h1 { font-size: 40px; font-weight: 800; letter-spacing: -.5px; }
+    .login-intro h2 { font-size: 40px; font-weight: 800; letter-spacing: -.5px; margin: 4px 0 6px;
+        background: linear-gradient(90deg,#ff8a1f,#fa2256); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .login-intro h3 { font-size: 26px; font-weight: 700; color: #8a8f99; }
+    .login-illus { margin-top: 26px; }
+    .login-card { width: 444px; background: #fff; border-radius: 16px; padding: 46px 42px 44px; box-shadow: 0 18px 50px rgba(80,90,130,.10); }
+    .field { margin-bottom: 20px; }
+    .field label { display: block; font-size: 14px; color: var(--text-2); margin-bottom: 10px; }
+    .field .ipt { width: 100%; height: 46px; border: 1px solid transparent; background: #f1f4fa; border-radius: 8px; padding: 0 14px; font-size: 14px; color: var(--text); outline: none; }
+    .field .ipt:focus { border-color: var(--pink); background: #fff; }
+    .field .ipt::placeholder { color: #c0c4cc; }
+    .captcha-row { display: flex; gap: 12px; }
+    .captcha-row .ipt { flex: 1; }
+    .captcha-img { width: 118px; height: 46px; border-radius: 8px; background: #eef1f7; cursor: pointer; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .remember { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text-2); margin: 4px 0 26px; cursor: pointer; }
+    .remember input { width: 14px; height: 14px; accent-color: var(--pink); }
+    .btn-login { width: 100%; height: 48px; border: none; border-radius: 8px; background: var(--pink); color: #fff; font-size: 16px; letter-spacing: 6px; cursor: pointer; }
+    .btn-login:hover { background: var(--pink-dark); }
+
+    /* ============ 平台框架 ============ */
+    .app { min-height: 100vh; display: flex; flex-direction: column;
+        background: #f6f7fb;
+        background-image: radial-gradient(680px 420px at 100% 0%, rgba(190,206,255,.22), transparent 70%),
+                          radial-gradient(680px 460px at 0% 100%, rgba(255,205,225,.22), transparent 70%); }
+    .topbar { height: 56px; background: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 22px; position: sticky; top: 0; z-index: 30; }
+    .topbar .brand { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; }
+    .topbar .logo-mark { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg,#ff4d6d,#fa2256); display: flex; align-items: center; justify-content: center; }
+    .topbar .logo-mark svg { width: 13px; height: 13px; }
+    .user-box { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-2); cursor: pointer; position: relative; padding: 6px 4px; }
+    .user-box .avatar { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg,#8ec5ff,#c8a8ff); display: flex; align-items: center; justify-content: center; }
+    .user-box .avatar svg { width: 14px; height: 14px; }
+    .user-menu { position: absolute; right: 0; top: 40px; background: #fff; border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,.12); padding: 6px 0; min-width: 132px; }
+    .user-menu div { padding: 9px 16px; font-size: 13px; color: var(--text-2); }
+    .user-menu div:hover { background: #f7f8fa; color: var(--pink); }
+
+    .app-body { flex: 1; display: flex; align-items: stretch; }
+    .sidebar { width: 190px; background: #fff; padding: 16px 0; position: relative; transition: width .2s; flex-shrink: 0; }
+    .sidebar.collapsed { width: 64px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 22px; font-size: 14px; color: var(--text-2); cursor: pointer; white-space: nowrap; overflow: hidden; }
+    .nav-item svg { width: 17px; height: 17px; flex-shrink: 0; }
+    .nav-item:hover { color: var(--pink); }
+    .nav-item.active { background: var(--pink-soft); color: var(--pink); font-weight: 500; }
+    .sidebar.collapsed .nav-item span { display: none; }
+    .collapse-btn { position: absolute; right: -11px; top: 22px; width: 22px; height: 22px; border-radius: 50%; background: #b9bcc4; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; z-index: 5; }
+    .collapse-btn:hover { background: #9aa0a8; }
+
+    .main { flex: 1; padding: 12px 20px 24px; min-width: 0; }
+    .panel { background: #fff; border-radius: 10px; padding: 20px 22px; }
+    .panel.tall { min-height: calc(100vh - 100px); }
+
+    /* ============ 筛选区 ============ */
+    .filter-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 18px; }
+    .filter-item { display: flex; align-items: center; gap: 8px; }
+    .filter-item > label { font-size: 14px; color: var(--text-2); white-space: nowrap; }
+    .ipt-sm { height: 32px; border: 1px solid #dcdfe6; border-radius: 4px; padding: 0 11px; font-size: 13px; color: var(--text); outline: none; background: #fff; }
+    .ipt-sm:focus { border-color: var(--pink); }
+    .ipt-sm::placeholder { color: #c0c4cc; }
+    .sel-sm { height: 32px; width: 118px; border: 1px solid #dcdfe6; border-radius: 4px; padding: 0 26px 0 11px; font-size: 13px; color: var(--text); background: #fff; outline: none; appearance: none; cursor: pointer;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5l3.5 3.5 3.5-3.5' stroke='%23c0c4cc' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat; background-position: right 9px center; }
+    .sel-sm:focus { border-color: var(--pink); }
+    .date-range { display: flex; align-items: center; gap: 6px; height: 32px; border: 1px solid #dcdfe6; border-radius: 4px; padding: 0 10px; background: #fff; }
+    .date-range svg { width: 14px; height: 14px; color: #c0c4cc; }
+    .date-range input { border: none; outline: none; width: 92px; font-size: 13px; text-align: center; color: var(--text); }
+    .date-range input::placeholder { color: #c0c4cc; }
+    .date-range .sep { font-size: 13px; color: var(--text-3); }
+    .filter-actions { margin-left: auto; display: flex; gap: 10px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 32px; padding: 0 16px; border-radius: 4px; font-size: 13px; cursor: pointer; border: 1px solid transparent; transition: all .15s; }
+    .btn svg { width: 13px; height: 13px; }
+    .btn-primary { background: var(--pink); color: #fff; }
+    .btn-primary:hover { background: var(--pink-dark); }
+    .btn-plain { background: #fff; color: var(--text-2); border-color: #dcdfe6; }
+    .btn-plain:hover { color: var(--pink); border-color: #f9a7bd; }
+    .btn-soft { background: var(--pink-soft); color: #f7809d; border-color: transparent; }
+    .toolbar { margin: 16px 0 18px; }
+
+    /* ============ 表格 ============ */
+    .table-wrap { border: 1px solid var(--border); border-radius: 2px; overflow-x: auto; }
+    table.grid { width: 100%; border-collapse: collapse; }
+    table.grid th, table.grid td { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 12px 10px; text-align: center; font-size: 13px; }
+    table.grid th:last-child, table.grid td:last-child { border-right: none; }
+    table.grid tr:last-child td { border-bottom: none; }
+    table.grid th { background: #fafafa; color: var(--text); font-weight: 600; white-space: nowrap; }
+    table.grid td { color: var(--text-2); }
+    table.grid tbody tr:hover td { background: #fcfcfd; }
+    .th-tip { display: inline-flex; align-items: center; gap: 3px; }
+    .tip-dot { width: 13px; height: 13px; border-radius: 50%; background: #c8ccd4; color: #fff; font-size: 9px; display: inline-flex; align-items: center; justify-content: center; cursor: help; }
+    .tip-dot { position: relative; }
+    .tip-pop { display: none; position: absolute; left: 50%; top: 22px; transform: translateX(-50%); z-index: 60;
+               width: 330px; padding: 14px 16px; background: #2b2f38; color: #e8eaed; border-radius: 6px;
+               font-size: 13px; font-weight: 400; line-height: 2; text-align: left; white-space: normal;
+               box-shadow: 0 8px 24px rgba(0,0,0,.28); cursor: default; }
+    .tip-pop b { color: #fff; font-weight: 600; }
+    .tip-pop::after { content: ''; position: absolute; left: 50%; top: -6px; margin-left: -6px;
+                      border: 6px solid transparent; border-top: 0; border-bottom-color: #2b2f38; }
+    .tip-dot:hover .tip-pop { display: block; }
+    /* 审核意见弹窗 */
+    .adv-form { padding: 6px 4px 2px; }
+    .adv-row { display: flex; align-items: flex-start; margin-bottom: 18px; }
+    .adv-l { width: 84px; flex-shrink: 0; text-align: right; padding-right: 16px; font-size: 14px; color: var(--text-2); line-height: 40px; }
+    .adv-ipt { flex: 1; min-width: 0; height: 40px; padding: 0 12px; font-size: 14px; color: #303133;
+               background: #f7f8fa; border: 1px solid #ebeef5; border-radius: 4px; outline: none; }
+    .adv-ta { flex: 1; min-width: 0; height: 190px; padding: 10px 12px; font-size: 14px; color: #303133; line-height: 1.8;
+              background: #f7f8fa; border: 1px solid #ebeef5; border-radius: 4px; outline: none; resize: vertical; font-family: inherit; }
+    .drama-name { color: var(--pink); }
+    .cover { width: 60px; height: 88px; border-radius: 3px; margin: 0 auto; position: relative; overflow: hidden;
+        background: linear-gradient(160deg,#7d9ac4 0%,#3a4a6b 55%,#1d2436 100%); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+    .cover .badge { position: absolute; top: 3px; left: 3px; width: 9px; height: 9px; border-radius: 50%; background: var(--pink); }
+    .cover .t1 { position: absolute; bottom: 15px; left: 0; right: 0; text-align: center; font-size: 6px; color: #f6e2b8; letter-spacing: .3px; font-weight: 700; }
+    .cover .t2 { position: absolute; bottom: 7px; left: 0; right: 0; text-align: center; font-size: 5px; color: #e9c98e; letter-spacing: .3px; }
+    .cover::after { content: ''; position: absolute; left: 12px; bottom: 26px; width: 36px; height: 30px; border-radius: 50% 50% 45% 45%; background: rgba(255,255,255,.28); filter: blur(3px); }
+    /* 审核状态配色（用 table.grid td.xx 提高特异性，压过 table.grid td 的灰色） */
+    .st-pass, table.grid td.st-pass { color: var(--green); font-weight: 600; }      /* 审核通过：绿 */
+    .st-wait, table.grid td.st-wait { color: var(--text-2); }                       /* 待提审：灰 */
+    .st-bad,  table.grid td.st-bad  { color: #f23c3c; font-weight: 600; }           /* 审核不通过 / 待修改：红 */
+    .st-reject { color: var(--pink); }
+    .ops { display: inline-flex; gap: 12px; white-space: nowrap; }
+    .ops a { color: var(--pink); font-size: 13px; cursor: pointer; }
+    .ops a:hover { text-decoration: underline; }
+
+    .pager { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 18px; font-size: 13px; color: var(--text-2); }
+    .pager .sel-sm { width: 100px; }
+    .pg-btn { min-width: 30px; height: 30px; border-radius: 4px; background: #f4f4f5; color: var(--text-2); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; }
+    .pg-btn.cur { background: var(--pink); color: #fff; }
+    .pg-btn:hover:not(.cur) { color: var(--pink); }
+
+    /* ============ 首页 ============ */
+    .stat-card { background: #fff; border-radius: 10px; padding: 26px 28px; display: flex; gap: 24px; align-items: stretch; }
+    .stat-inner { flex: 1; background: #f7f8fb; border-radius: 10px; display: flex; align-items: center; padding: 30px 0; }
+    .stat-cell { flex: 1; text-align: center; }
+    .stat-cell b { display: block; font-size: 30px; font-weight: 700; line-height: 1.2; }
+    .stat-cell b.red { color: #ff2b2b; }
+    .stat-cell span { font-size: 14px; color: var(--text-2); }
+    .doc-btn { width: 100px; border-radius: 10px; background: var(--pink); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
+    .doc-btn:hover { background: var(--pink-dark); }
+    .doc-btn svg { width: 30px; height: 30px; }
+    .doc-btn span { font-size: 14px; }
+
+    .home-cols { display: flex; gap: 22px; margin-top: 20px; align-items: stretch; }
+    .card { background: #fff; border-radius: 10px; padding: 20px 22px; min-height: 500px; }
+    .card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+    .card-title { font-size: 18px; font-weight: 700; }
+    .card-more { font-size: 13px; color: var(--text-3); cursor: pointer; }
+    .card-more:hover { color: var(--pink); }
+    .col-left { width: 34%; }
+    .col-right { flex: 1; }
+    .quick-item { width: 108px; text-align: center; cursor: pointer; }
+    .quick-item .qi-icon { width: 76px; height: 76px; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; }
+    .quick-item .qi-icon svg { width: 72px; height: 72px; }
+    .quick-item span { font-size: 13px; color: var(--text-2); }
+    .quick-item:hover span { color: var(--pink); }
+
+    .msg-line { display: flex; align-items: flex-start; gap: 12px; padding: 12px 2px; border-bottom: 1px solid #f2f3f5; }
+    .msg-line:last-child { border-bottom: none; }
+    .tag-notice { flex-shrink: 0; background: var(--orange); color: #fff; font-size: 12px; padding: 2px 6px; border-radius: 3px; margin-top: 1px; }
+    .msg-line .mt { font-size: 14px; color: var(--text); }
+    .msg-line .mt em { font-style: normal; color: var(--text); }
+    .msg-line .mtime { font-size: 12px; color: var(--text-3); margin-top: 4px; }
+
+    /* ============ 账号信息 ============ */
+    .info-card { background: #fff; border-radius: 10px; padding: 22px 26px 26px; margin-bottom: 20px; }
+    .info-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .info-head-left { display: flex; align-items: center; gap: 12px; }
+    .info-title { font-size: 17px; font-weight: 700; }
+    .badge-pass { display: inline-flex; align-items: center; gap: 4px; background: #e6f9ed; color: #22a35a; font-size: 12px; padding: 4px 12px; border-radius: 12px; }
+    .link-blue { font-size: 13px; color: #3b82f6; cursor: pointer; }
+    .link-blue:hover { text-decoration: underline; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px 40px; }
+    .info-field label { display: block; font-size: 13px; color: #a8acb3; margin-bottom: 8px; }
+    .info-field p { font-size: 15px; font-weight: 600; color: var(--text); }
+
+    /* ============ 消息中心 ============ */
+    .page-head { display: flex; align-items: center; justify-content: space-between; }
+    .page-title { font-size: 18px; font-weight: 700; }
+    .tabs { display: flex; gap: 30px; border-bottom: 1px solid #ebeef5; margin: 16px 0 4px; }
+    .tab { padding: 10px 2px; font-size: 14px; color: var(--text-2); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+    .tab.active { color: var(--pink); border-bottom-color: var(--pink); }
+    .notice-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 16px 14px; border-bottom: 1px solid #f2f3f5; }
+    .notice-row.unread { background: #fafafa; }
+    .notice-row .nt { font-size: 14px; font-weight: 600; color: var(--text); }
+    .notice-row .nt.green { color: var(--green); }
+    .notice-row .nsub { font-size: 13px; color: var(--text-3); margin-top: 8px; }
+    .notice-row .ntime { font-size: 12px; color: var(--text-3); flex-shrink: 0; padding-top: 2px; }
+
+    /* ============ 添加短剧（三步表单） ============ */
+    .create-page { background: #fff; border-radius: 6px; min-height: calc(100vh - 120px); }
+    .cp-header { display: flex; align-items: center; padding: 14px 24px 0; position: sticky; top: 0; background: #fff; z-index: 20; }
+    .cp-back { display: flex; align-items: center; gap: 8px; font-size: 15px; color: var(--text); cursor: pointer; }
+    .cp-back:hover { color: var(--pink); }
+    .cp-vline { width: 1px; height: 18px; background: #dcdfe6; margin: 0 18px; }
+    .cp-title { font-size: 20px; font-weight: 700; }
+    .cp-actions { display: flex; gap: 12px; margin-left: auto; }
+    .btn-lg { display: inline-flex; align-items: center; justify-content: center; height: 40px; padding: 0 24px; border-radius: 4px; font-size: 15px; cursor: pointer; border: 1px solid transparent; }
+    .btn-lg.primary { background: var(--pink); color: #fff; }
+    .btn-lg.primary:hover { background: var(--pink-dark); }
+    .btn-lg.plain { background: #fff; color: var(--text-2); border-color: #dcdfe6; }
+    .btn-lg.plain:hover { color: var(--pink); border-color: #f9a7bd; }
+
+    /* 步骤条 */
+    .steps3 { flex: 1; display: flex; justify-content: center; }
+    .steps3 .inner { display: flex; align-items: flex-start; }
+    .st-node { width: 120px; text-align: center; }
+    .st-circle { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid #c8ccd4; color: #b4b8c0; font-size: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto; background: #fff; }
+    .st-name { font-size: 15px; color: #b4b8c0; margin-top: 14px; }
+    .st-sub { font-size: 13px; color: #b4b8c0; margin-top: 8px; }
+    .st-node.cur .st-circle { border-color: var(--pink); color: var(--pink); }
+    .st-node.cur .st-name, .st-node.cur .st-sub { color: var(--pink); }
+    .st-node.todo .st-circle { border-color: #303133; color: #303133; }
+    .st-node.todo .st-name { color: #303133; font-weight: 700; }
+    .st-node.todo .st-sub { color: var(--text-2); }
+    .st-node.done .st-circle { border-color: var(--pink); background: var(--pink); color: #fff; }
+    .st-node.done .st-name, .st-node.done .st-sub { color: var(--pink); }
+    .st-line { width: 210px; height: 1px; background: #dcdfe6; margin-top: 14px; }
+
+    /* 主体 */
+    .cp-body { display: flex; align-items: flex-start; padding: 22px 0 80px; }
+    .cp-form { flex: 1; min-width: 0; padding: 0 34px 0 42px; }
+    .cp-anchor { width: 210px; flex-shrink: 0; position: sticky; top: 84px; border-left: 1px solid #e4e7ed; padding: 4px 0; }
+    .cp-anchor a { display: block; padding: 16px 0 16px 26px; font-size: 15px; color: var(--text-2); cursor: pointer; border-left: 2px solid transparent; margin-left: -1px; }
+    .cp-anchor a:hover { color: var(--pink); }
+    .cp-anchor a.active { color: #303133; font-weight: 700; border-left-color: #e60039; }
+
+    .cp-sec-title { font-size: 20px; font-weight: 700; margin: 6px 0 22px; }
+    .cp-sec-title.gap { margin-top: 46px; }
+
+    .fr { display: flex; align-items: flex-start; margin-bottom: 20px; }
+    .fr-label { width: 152px; flex-shrink: 0; text-align: right; padding: 11px 14px 0 0; font-size: 14px; color: var(--text-2); }
+    .fr-label .req { color: #f56c6c; margin-right: 3px; }
+    .fr-body { flex: 1; max-width: 880px; min-width: 0; }
+    .fr-hint { font-size: 13px; color: var(--text-3); margin-top: 12px; }
+
+    .ipt-wrap { position: relative; }
+    .cp-ipt { width: 100%; height: 40px; border: 1px solid #edeef2; border-radius: 4px; padding: 0 62px 0 14px; font-size: 14px; color: var(--text); outline: none; background: #fff; }
+    .cp-ipt:focus { border-color: var(--pink); }
+    .cp-ipt::placeholder { color: #c8ccd4; }
+    .cp-ipt.err { border-color: #f56c6c; }
+    .cp-count { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 14px; color: #c8ccd4; pointer-events: none; }
+    .cp-ta { width: 100%; min-height: 100px; border: 1px solid #edeef2; border-radius: 4px; padding: 12px 14px 26px; font-size: 14px; color: var(--text); outline: none; resize: vertical; font-family: inherit; line-height: 1.6; }
+    .cp-ta:focus { border-color: var(--pink); }
+    .cp-ta::placeholder { color: #c8ccd4; }
+    .cp-ta.err { border-color: #f56c6c; }
+    .ta-count { position: absolute; right: 16px; bottom: 12px; font-size: 14px; color: #c8ccd4; pointer-events: none; }
+    .cp-sel { width: 100%; height: 40px; border: 1px solid #edeef2; border-radius: 4px; padding: 0 34px 0 14px; font-size: 14px; color: var(--text); background: #fff; outline: none; appearance: none; cursor: pointer;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5l3.5 3.5 3.5-3.5' stroke='%23c0c4cc' stroke-width='1.1' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat; background-position: right 12px center; }
+    .cp-sel:focus { border-color: var(--pink); }
+    .cp-sel.placeholder { color: #c8ccd4; }
+    .cp-sel.err { border-color: #f56c6c; }
+
+    .icon-ipt { display: flex; align-items: center; gap: 8px; width: 250px; height: 40px; border: 1px solid #edeef2; border-radius: 4px; padding: 0 12px; }
+    .icon-ipt.wide { width: 290px; }
+    .icon-ipt.err { border-color: #f56c6c; }
+    .icon-ipt svg { width: 15px; height: 15px; color: #c8ccd4; flex-shrink: 0; }
+    .icon-ipt input { flex: 1; min-width: 0; border: none; outline: none; font-size: 14px; color: var(--text); }
+    .icon-ipt input::placeholder { color: #c8ccd4; }
+
+    .rd-group { display: flex; align-items: center; gap: 28px; padding-top: 11px; flex-wrap: wrap; }
+    .rd { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-2); cursor: pointer; }
+    .rd input { width: 15px; height: 15px; accent-color: var(--pink); margin: 0; }
+    .rd:has(input:checked) { color: var(--pink); }
+    .rd-group.err { outline: 1px dashed #f56c6c; outline-offset: 6px; border-radius: 4px; }
+    .q-tip { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; border-radius: 50%; background: #c8ccd4; color: #fff; font-size: 10px; cursor: help; vertical-align: 1px; }
+
+    .type-cards { display: flex; gap: 26px; }
+    .type-card2 { width: 300px; border: 1px solid #edeef2; border-radius: 8px; overflow: hidden; cursor: pointer; position: relative; background: #fff; }
+    .type-card2.on { border: 2px solid var(--pink); }
+    .type-card2 .tc-pic { height: 118px; position: relative; display: flex; flex-direction: column; justify-content: center; padding-left: 22px; color: #fff; }
+    .type-card2 .tc-pic.live { background: linear-gradient(100deg,#c8102e 0%,#e0293f 45%,#b8607a 100%); }
+    .type-card2 .tc-pic.anime { background: linear-gradient(100deg,#f0641e 0%,#f5872c 45%,#6d7fa8 100%); }
+    .type-card2 .tc-pic b { font-size: 25px; font-style: italic; letter-spacing: 1px; }
+    .type-card2 .tc-pic span { font-size: 11px; letter-spacing: 1.5px; margin-top: 4px; opacity: .95; }
+    .type-card2 .tc-figs { position: absolute; right: 0; top: 0; bottom: 0; width: 150px; display: flex; align-items: flex-end; justify-content: center; gap: 6px; padding-bottom: 6px; opacity: .55; }
+    .type-card2 .tc-figs i { display: block; width: 26px; border-radius: 13px 13px 0 0; background: rgba(255,255,255,.75); }
+    .type-card2 .tc-name { height: 52px; display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--text); }
+    .type-card2 .tc-check { position: absolute; left: 0; top: 0; width: 32px; height: 26px; background: var(--pink); border-radius: 6px 0 14px 0; display: none; align-items: center; justify-content: center; }
+    .type-card2 .tc-check svg { width: 14px; height: 14px; }
+    .type-card2.on .tc-check { display: flex; }
+    .type-cards.err .type-card2 { border-color: #f56c6c; }
+
+    .up-box { width: 168px; height: 168px; border: 1px dashed #dcdfe6; border-radius: 4px; background: #fafbfc; display: flex; align-items: center; justify-content: center; font-size: 30px; color: #b4b8c0; cursor: pointer; }
+    .up-box:hover { border-color: var(--pink); color: var(--pink); }
+    .up-box.small { width: 112px; height: 112px; font-size: 26px; }
+    .up-box.done { border-style: solid; border-color: var(--pink); color: var(--pink); background: #fff5f8; font-size: 22px; }
+    .up-box.err { border-color: #f56c6c; }
+    /* 单集时长不足 25 秒 */
+    .dur-bad { color: #f23c3c; font-weight: 700; }
+    .up-row.short { background: #fff4f4; border-color: #f7c9c9; }
+    table.grid tbody tr.short td { background: #fff4f4; }
+    table.grid tbody tr.short:hover td { background: #ffecec; }
+    /* 封面多图：最多 3 张，首位为主图 */
+    .cov-wrap { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+    .cov-wrap.err .cov-add { border-color: #f56c6c; }
+    .cov-list { display: flex; gap: 12px; }
+    .cov-item { width: 168px; height: 168px; border: 1px solid #e6e8ec; border-radius: 4px; overflow: hidden; position: relative; background: #fff; cursor: grab; }
+    .cov-item img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+    .cov-item.main { border-color: var(--pink); }
+    .cov-item.drag { opacity: .35; }
+    .cov-item.over { outline: 2px dashed var(--pink); outline-offset: -2px; }
+    .cov-badge { position: absolute; left: 0; top: 0; background: var(--pink); color: #fff; font-size: 11px; line-height: 18px; padding: 0 7px; border-radius: 0 0 4px 0; }
+    .cov-item .cov-idx { position: absolute; left: 0; top: 0; background: rgba(0,0,0,.5); color: #fff; font-size: 11px; line-height: 18px; padding: 0 7px; border-radius: 0 0 4px 0; }
+    .cov-del { position: absolute; right: 4px; top: 4px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,.5); color: #fff; font-size: 13px; line-height: 20px; text-align: center; cursor: pointer; }
+    .cov-del:hover { background: #f56c6c; }
+    .cov-add { width: 168px; height: 168px; flex-direction: column; gap: 6px; }
+    .cov-add.dragover { border-color: var(--pink); background: #fff5f8; }
+    .cov-plus { font-size: 30px; line-height: 1; }
+    .cov-tip { font-size: 12px; color: #b4b8c0; }
+
+    .role-card { border: 1px solid #edeef2; border-radius: 6px; padding: 20px 22px 22px; margin-bottom: 18px; max-width: 1060px; }
+    .role-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .role-card-title { font-size: 15px; font-weight: 700; padding-left: 10px; border-left: 3px solid #4b7bec; }
+    .role-del { font-size: 13px; color: #f56c6c; cursor: pointer; }
+    .role-field { margin-bottom: 18px; }
+    .role-field > label { display: block; font-size: 14px; color: var(--text-2); margin-bottom: 10px; }
+    .role-field > label .req { color: #f56c6c; margin-right: 3px; }
+    .role-field > label .opt { color: var(--text-3); font-size: 13px; margin-left: 4px; }
+    .role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
+    .btn-add-role { display: inline-flex; align-items: center; gap: 4px; height: 36px; padding: 0 16px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 14px; color: var(--text-2); cursor: pointer; background: #fff; }
+    .btn-add-role:hover { color: var(--pink); border-color: #f9a7bd; }
+
+    .num-spin { display: flex; align-items: center; width: 150px; height: 40px; border: 1px solid #edeef2; border-radius: 4px; background: #f7f8fa; }
+    .num-spin input { flex: 1; min-width: 0; border: none; outline: none; background: transparent; padding: 0 12px; font-size: 14px; }
+    .num-spin .sp { width: 26px; border-left: 1px solid #edeef2; display: flex; flex-direction: column; }
+    .num-spin .sp span { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #909399; cursor: pointer; }
+    .num-spin .sp span:first-child { border-bottom: 1px solid #edeef2; }
+    .inline-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .cb { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-2); cursor: pointer; }
+    .cb input { width: 15px; height: 15px; accent-color: var(--pink); margin: 0; }
+
+    /* 步骤2 物料上传 */
+    .mat-entries { display: flex; gap: 22px; flex-wrap: wrap; }
+    .mat-entry { width: 240px; border: 1px solid #edeef2; border-radius: 10px; padding: 28px 20px 22px; text-align: center; cursor: pointer; transition: all .18s; }
+    .mat-entry:hover { border-color: var(--pink); box-shadow: 0 6px 18px rgba(250,34,86,.10); transform: translateY(-2px); }
+    .mat-entry .me-ico { font-size: 34px; }
+    .mat-entry .me-name { font-size: 15px; font-weight: 600; margin-top: 12px; }
+    .mat-entry .me-sub { font-size: 13px; color: var(--text-3); margin-top: 8px; }
+    .mat-bar { display: flex; align-items: center; gap: 30px; margin-bottom: 16px; }
+    .mat-bar .mb-item { font-size: 14px; color: var(--text-2); }
+    .mat-bar .mb-item b { color: var(--pink); }
+    .mat-bar .mb-right { margin-left: auto; }
+    .link-back { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; color: var(--pink); cursor: pointer; margin-bottom: 16px; }
+    .ops-mini a { color: var(--pink); font-size: 13px; cursor: pointer; margin-right: 10px; }
+    .ops-mini a.dis { color: #c8ccd4; cursor: not-allowed; }
+    .mat-empty { padding: 44px 0; text-align: center; color: #c8ccd4; font-size: 14px; border: 1px solid var(--border); border-top: none; }
+
+    /* 步骤3 完成 */
+    .done-box { text-align: center; padding: 90px 0 40px; }
+    .done-box .dot { width: 74px; height: 74px; border-radius: 50%; background: #e6f9ed; color: #22a35a; font-size: 38px; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+    .done-box h3 { font-size: 20px; font-weight: 700; }
+    .done-box p { font-size: 14px; color: var(--text-3); margin-top: 12px; }
+    .done-box .btns { display: flex; gap: 12px; justify-content: center; margin-top: 30px; }
+
+    /* 弹窗 */
+    .mask { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 3000; display: flex; align-items: center; justify-content: center; }
+    .dlg { width: 460px; max-width: 90vw; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 14px 44px rgba(0,0,0,.2); }
+    .dlg-hd { padding: 16px 20px; border-bottom: 1px solid #f2f3f5; display: flex; align-items: center; justify-content: space-between; }
+    .dlg-hd b { font-size: 16px; }
+    .dlg-hd i { font-size: 20px; color: #909399; cursor: pointer; font-style: normal; }
+    .dlg-bd { padding: 24px 22px; text-align: center; }
+    .dlg-bd .big { font-size: 40px; margin-bottom: 12px; }
+    .dlg-bd .m1 { font-size: 15px; font-weight: 600; }
+    .dlg-bd .m2 { font-size: 13px; color: var(--text-3); margin-top: 8px; line-height: 1.7; }
+    .dlg-ft { padding: 14px 20px; border-top: 1px solid #f2f3f5; display: flex; justify-content: flex-end; gap: 10px; }
+    .dlg-ft .btn-lg { height: 36px; font-size: 14px; padding: 0 18px; }
+
+    /* 步骤条：已完成段落变粉 */
+    .st-line.on { background: var(--pink); }
+    .st-node.done .st-circle { border-color: var(--pink); background: #fff; color: var(--pink); }
+
+    /* 步骤2：卡片式页签 + 拖拽上传 */
+    .tabs-card { border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+    .tabs-card-hd { display: flex; background: #fafafa; border-bottom: 1px solid var(--border); }
+    .tc { height: 46px; padding: 0 24px; display: flex; align-items: center; font-size: 14px; color: var(--text-2); cursor: pointer; }
+    .tc:hover { color: var(--pink); }
+    .tc.on { background: #fff; color: var(--pink); border-right: 1px solid var(--border); margin-bottom: -1px; padding-bottom: 1px; }
+    .tc.on + .tc { border-left: none; }
+    .tabs-card-bd { background: #fff; padding: 40px 24px 16px; }
+    .dropzone { width: 360px; max-width: 100%; margin: 0 auto; border: 1px dashed #dcdfe6; border-radius: 6px; padding: 34px 20px 30px; text-align: center; cursor: pointer; }
+    .dropzone:hover { border-color: var(--pink); }
+    .dz-cloud { width: 56px; height: 46px; }
+    .dz-text { font-size: 14px; color: var(--text-2); margin-top: 14px; }
+    .dz-text span { color: var(--pink); }
+    .dz-ext { text-align: center; font-size: 13px; color: var(--text-3); margin-top: 20px; }
+    .up-stat { text-align: right; font-size: 13px; color: var(--text-2); margin-top: 30px; }
+    .up-stat .ok { color: var(--green); }
+    .up-stat .bad { color: var(--orange); }
+
+    /* 步骤3：上传完成 */
+    .done-box { text-align: center; padding: 170px 0 60px; }
+    .done-box h3 { font-size: 28px; font-weight: 700; }
+    .done-box p { font-size: 14px; color: var(--text-3); margin-top: 16px; }
+    .done-box .btns { display: flex; justify-content: center; margin-top: 22px; }
+
+    /* 真实上传：图片预览 / 文件条 / 拖拽态 / 文件列表 */
+    .up-box.done { padding: 0; font-size: 0; border-style: solid; border-color: var(--pink); background: #fff; position: relative; overflow: hidden; }
+    .up-box.done img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .up-del { position: absolute; top: 0; right: 0; width: 22px; height: 22px; background: rgba(0,0,0,.5); color: #fff; font-size: 14px; display: flex; align-items: center; justify-content: center; border-radius: 0 0 0 6px; cursor: pointer; }
+    .up-del:hover { background: var(--pink); }
+    .up-name { font-size: 13px; color: var(--text-2); margin-top: 8px; max-width: 300px; word-break: break-all; }
+    .up-name.warn { color: #e6a23c; }
+    .file-chip { display: inline-flex; align-items: center; gap: 10px; height: 34px; padding: 0 12px; margin-top: 12px; background: #f7f8fa; border-radius: 4px; font-size: 13px; color: var(--text-2); }
+    .file-chip i { font-style: normal; color: var(--text-3); }
+    .file-chip em { font-style: normal; font-size: 15px; color: #c0c4cc; cursor: pointer; }
+    .file-chip em:hover { color: var(--pink); }
+    .dropzone.over { border-color: var(--pink); background: #fff7f9; }
+    .file-list { max-width: 720px; margin: 20px auto 0; }
+    .fl-row { display: flex; align-items: center; gap: 14px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 8px; font-size: 13px; }
+    .fl-row .fl-name { flex: 1; min-width: 0; color: var(--pink); word-break: break-all; }
+    .fl-row .fl-meta { color: var(--text-3); flex-shrink: 0; }
+    .fl-row .fl-st { width: 46px; text-align: right; flex-shrink: 0; }
+    .fl-row .fl-st.ok { color: var(--green); }
+    .fl-row .fl-st.ing { color: var(--orange); }
+    .fl-row .fl-del { color: #c0c4cc; cursor: pointer; font-size: 15px; }
+    .fl-row .fl-del:hover { color: var(--pink); }
+
+    /* 上传页（图1）：粉色虚线框 + 文件信息条 */
+    .dropzone { width: 420px; border-color: #f9a7bd; padding: 44px 20px 40px; }
+    .up-stat { margin-top: 20px; }
+    .file-list { max-width: 100%; margin: 12px 0 0; }
+    .up-row { display: flex; align-items: center; gap: 14px; background: #f8f7f4; border-radius: 4px; padding: 12px 16px; margin-bottom: 10px; }
+    .up-row .up-idx { width: 18px; text-align: center; font-size: 13px; color: var(--text-3); flex-shrink: 0; }
+    .up-row .up-thumb { width: 44px; height: 56px; border-radius: 3px; object-fit: cover; background: #e4e7ed; flex-shrink: 0; display: block; }
+    .up-row .up-info { flex: 1; min-width: 0; }
+    .up-row .up-fname { font-size: 14px; color: var(--text); word-break: break-all; }
+    .up-row .up-meta { font-size: 13px; color: var(--text-3); margin-top: 7px; }
+    .up-row .up-acts { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+    .up-row .up-acts .txt-btn { font-size: 13px; color: var(--text-2); cursor: pointer; }
+    .up-row .up-acts .txt-btn:hover { color: var(--pink); }
+    .up-row .up-acts .ico { width: 18px; height: 18px; cursor: pointer; color: #606266; }
+    .up-row .up-acts .ico:hover { color: var(--pink); }
+    .up-row .up-acts .ico.del { color: #f5222d; }
+
+    /* 剧集信息页 */
+    .ep-head { display: flex; align-items: flex-start; }
+    .ep-name { font-size: 19px; font-weight: 700; }
+    .ep-meta { display: flex; gap: 30px; font-size: 14px; color: var(--text-2); margin-top: 12px; }
+    .ep-btns { margin-left: auto; display: flex; gap: 12px; }
+    .btn-op { display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 14px; border-radius: 4px; font-size: 13px; color: #fff; background: var(--pink); cursor: pointer; margin-right: 8px; }
+    .btn-op:hover { background: var(--pink-dark); }
+    .btn-op.light { background: #f4886f; margin-right: 0; }
+    .btn-op.light:hover { background: #ea7259; }
+    .vthumb { width: 60px; height: 84px; border-radius: 3px; object-fit: cover; background: #e4e7ed; display: block; margin: 0 auto; }
+    .dlg-row { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 14px; color: var(--text-2); }
+
+    /* 列表页：新建记录的真实封面 / 审核中状态 */
+    .cover-img { width: 60px; height: 88px; border-radius: 3px; object-fit: cover; display: block; margin: 0 auto; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+    .st-ing, table.grid td.st-ing { color: #e6a23c; font-weight: 600; }   /* 审核中：橙 */
+
+    /* 发起提审 气泡确认 */
+    .popconfirm { position: absolute; right: 0; top: calc(100% + 10px); width: 212px; background: #fff; border: 1px solid #ebeef5; border-radius: 4px; box-shadow: 0 2px 12px rgba(0,0,0,.14); padding: 14px 14px 10px; text-align: left; z-index: 60; }
+    .pc-msg { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; color: var(--text); }
+    .pc-ico { flex-shrink: 0; width: 16px; height: 16px; margin-top: 2px; border-radius: 50%; background: #f56c6c; color: #fff; font-size: 11px; font-style: italic; display: flex; align-items: center; justify-content: center; }
+    .pc-acts { display: flex; justify-content: flex-end; gap: 16px; margin-top: 14px; }
+    .pc-acts span { font-size: 13px; cursor: pointer; }
+    .pc-cancel { color: var(--text-2); }
+    .pc-cancel:hover { color: var(--pink); }
+    .pc-ok { color: var(--pink); }
+    .pc-ok:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<!-- ==================== 登录页 ==================== -->
+<div class="login-page" id="loginPage">
+    <div class="login-topbar">
+        <div class="login-brand">
+            <div class="logo-mark">
+                <svg viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <div class="logo-text">
+                <b>DramaBox</b>
+                <span>Your favorite Dramas in one Box</span>
+            </div>
+        </div>
+        <div class="lang-switch">简体中文</div>
+    </div>
+
+    <div class="login-body">
+        <div class="login-intro">
+            <h1>DramaBox</h1>
+            <h2>Co-Partner Platform</h2>
+            <h3>DramaBox版权合作平台</h3>
+            <div class="login-illus">
+                <svg width="560" height="330" viewBox="0 0 560 330" fill="none">
+                    <ellipse cx="290" cy="250" rx="130" ry="34" fill="#e9ecfa"/>
+                    <ellipse cx="290" cy="238" rx="96" ry="25" fill="#dfe4f7"/>
+                    <!-- 左侧图表卡片 -->
+                    <g transform="rotate(-12 130 130)">
+                        <rect x="60" y="70" width="150" height="130" rx="14" fill="#fff" opacity=".92"/>
+                        <rect x="60" y="70" width="150" height="130" rx="14" fill="url(#g1)" opacity=".5"/>
+                        <rect x="82" y="150" width="16" height="32" rx="4" fill="#ffb3c6"/>
+                        <rect x="108" y="128" width="16" height="54" rx="4" fill="#fa2256" opacity=".75"/>
+                        <rect x="134" y="140" width="16" height="42" rx="4" fill="#ffc9a3"/>
+                        <rect x="160" y="112" width="16" height="70" rx="4" fill="#ff8a1f" opacity=".7"/>
+                        <rect x="82" y="92" width="60" height="8" rx="4" fill="#e3e7f5"/>
+                    </g>
+                    <!-- 右侧列表卡片 -->
+                    <g transform="rotate(10 430 200)">
+                        <rect x="370" y="150" width="150" height="110" rx="14" fill="#fff" opacity=".92"/>
+                        <rect x="392" y="176" width="80" height="9" rx="4.5" fill="#dfe4f7"/>
+                        <rect x="392" y="196" width="106" height="9" rx="4.5" fill="#eceff8"/>
+                        <rect x="392" y="216" width="66" height="9" rx="4.5" fill="#eceff8"/>
+                    </g>
+                    <!-- 右上圆点卡片 -->
+                    <g transform="rotate(8 430 90)">
+                        <rect x="372" y="46" width="126" height="92" rx="14" fill="#fff" opacity=".9"/>
+                        <circle cx="404" cy="76" r="12" fill="#dfe4f7"/>
+                        <rect x="426" y="70" width="56" height="8" rx="4" fill="#eceff8"/>
+                        <rect x="392" y="100" width="90" height="8" rx="4" fill="#eceff8"/>
+                    </g>
+                    <!-- 中间主体：播放按钮 -->
+                    <g>
+                        <rect x="216" y="96" width="148" height="148" rx="40" fill="url(#g2)"/>
+                        <path d="M272 148l44 24-44 24z" fill="#fff" opacity=".95"/>
+                    </g>
+                    <defs>
+                        <linearGradient id="g1" x1="60" y1="70" x2="210" y2="200" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#ffe3ec"/><stop offset="1" stop-color="#e6ecff"/>
+                        </linearGradient>
+                        <linearGradient id="g2" x1="216" y1="96" x2="364" y2="244" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#ff8fb0"/><stop offset=".5" stop-color="#fa2256"/><stop offset="1" stop-color="#ff7a2f"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+        </div>
+
+        <div class="login-card">
+            <div class="field">
+                <label>用户名</label>
+                <input class="ipt" id="loginUser" value="dbpartner001">
+            </div>
+            <div class="field">
+                <label>密码</label>
+                <input class="ipt" type="password" value="12345678">
+            </div>
+            <div class="field">
+                <label>验证码</label>
+                <div class="captcha-row">
+                    <input class="ipt" placeholder="请输入验证码">
+                    <div class="captcha-img" id="captcha" title="点击刷新验证码"></div>
+                </div>
+            </div>
+            <label class="remember"><input type="checkbox"> 记住我</label>
+            <button class="btn-login" onclick="doLogin()">登 录</button>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== 平台内页 ==================== -->
+<div class="app hidden" id="appPage">
+    <div class="topbar">
+        <div class="brand">
+            <div class="logo-mark"><svg viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></div>
+            DramaBox版权合作平台
+        </div>
+        <div class="user-box" onclick="toggleUserMenu(event)">
+            <div class="avatar"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 12a4 4 0 100-8 4 4 0 000 8zm0 2c-4 0-7 2-7 4.5V20h14v-1.5C19 16 16 14 12 14z"/></svg></div>
+            示例传媒A有限公司
+            <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2.5 4.5l3.5 3.5 3.5-3.5" stroke="#909399" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg>
+            <div class="user-menu hidden" id="userMenu">
+                <div onclick="go('account')">账号信息</div>
+                <div onclick="logout()">退出登录</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-body">
+        <!-- 左侧菜单 -->
+        <div class="sidebar" id="sidebar">
+            <div class="collapse-btn" onclick="toggleSidebar()" id="collapseBtn">‹</div>
+            <div class="nav-item" data-page="home" onclick="go('home')">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 8h-2.5v9h-5v-6h-3v6h-5v-9H3z"/></svg>
+                <span>首页</span>
+            </div>
+            <div class="nav-item" data-page="drama" onclick="go('drama')">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 7h18a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V8a1 1 0 011-1zm2-4l3 3H6L3.5 3.5 5 3zm6 0l3 3h-2l-3-3h2zm6 0l3 3h-2l-3-3h2zM10 10.5v6l5-3z"/></svg>
+                <span>短剧管理</span>
+            </div>
+            <div class="nav-item" data-page="account" onclick="go('account')">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a4 4 0 100-8 4 4 0 000 8zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5z"/></svg>
+                <span>账号信息</span>
+            </div>
+            <div class="nav-item" data-page="message" onclick="go('message')">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 22a2.5 2.5 0 002.5-2.5h-5A2.5 2.5 0 0012 22zm7-6v-5a7 7 0 00-5.5-6.8V3a1.5 1.5 0 00-3 0v1.2A7 7 0 005 11v5l-2 2v1h18v-1l-2-2z"/></svg>
+                <span>消息中心</span>
+            </div>
+        </div>
+
+        <div class="main">
+
+            <!-- ---------- 首页 ---------- -->
+            <div class="page hidden" id="page-home">
+                <div class="stat-card">
+                    <div class="stat-inner">
+                        <div class="stat-cell"><b>1</b><span>已通过数量</span></div>
+                        <div class="stat-cell"><b>0</b><span>审核中数量</span></div>
+                        <div class="stat-cell"><b class="red">0</b><span>需修改数量</span></div>
+                        <div class="stat-cell"><b class="red">0</b><span>审核不通过数量</span></div>
+                    </div>
+                    <a class="doc-btn" href="https://page.weixin.qq.com/smartpage/p/b1_AcEAgAY-AFwJb47nt7fT1incdZs?p=1jigjo" target="_blank" rel="noopener">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>
+                        <span>操作文档</span>
+                    </a>
+                </div>
+
+                <div class="home-cols">
+                    <div class="card col-left">
+                        <div class="card-head"><div class="card-title">常用功能</div></div>
+                        <div class="quick-item" onclick="go('drama')">
+                            <div class="qi-icon">
+                                <svg viewBox="0 0 72 72" fill="none">
+                                    <defs>
+                                        <linearGradient id="qiBack" x1="14" y1="16" x2="60" y2="52" gradientUnits="userSpaceOnUse">
+                                            <stop stop-color="#ffd9a0"/><stop offset="1" stop-color="#ffb15e"/>
+                                        </linearGradient>
+                                        <linearGradient id="qiFront" x1="10" y1="30" x2="58" y2="62" gradientUnits="userSpaceOnUse">
+                                            <stop stop-color="#ff9a5a"/><stop offset="1" stop-color="#ff7a3d"/>
+                                        </linearGradient>
+                                        <linearGradient id="qiPlay" x1="26" y1="30" x2="48" y2="52" gradientUnits="userSpaceOnUse">
+                                            <stop stop-color="#ff5f8f"/><stop offset="1" stop-color="#fa2256"/>
+                                        </linearGradient>
+                                    </defs>
+                                    <!-- 后层卡片 -->
+                                    <rect x="16" y="14" width="44" height="30" rx="5" fill="url(#qiBack)"/>
+                                    <!-- 白色内页 -->
+                                    <rect x="12" y="22" width="48" height="30" rx="5" fill="#fff" stroke="#ffe0cc"/>
+                                    <rect x="19" y="29" width="16" height="3.4" rx="1.7" fill="#dfe4f7"/>
+                                    <rect x="19" y="36" width="24" height="3.4" rx="1.7" fill="#eceff8"/>
+                                    <!-- 前层橙色卡槽 -->
+                                    <path d="M8 44h56v10a5 5 0 01-5 5H13a5 5 0 01-5-5z" fill="url(#qiFront)"/>
+                                    <path d="M8 44l8-9h40l8 9z" fill="#ffbe8a"/>
+                                    <!-- 播放按钮 -->
+                                    <circle cx="44" cy="42" r="11" fill="url(#qiPlay)"/>
+                                    <path d="M40.5 37l8 5-8 5z" fill="#fff"/>
+                                    <!-- 左上红色加号 -->
+                                    <circle cx="15" cy="17" r="6.5" fill="#f5334f"/>
+                                    <path d="M15 13.5v7M11.5 17h7" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+                                    <!-- 右上小圆点 -->
+                                    <circle cx="62" cy="26" r="3" fill="#8fa8ff"/>
+                                </svg>
+                            </div>
+                            <span>短剧管理</span>
+                        </div>
+                    </div>
+
+                    <div class="card col-right">
+                        <div class="card-head">
+                            <div class="card-title">最新消息</div>
+                            <div class="card-more" onclick="go('message')">更多&gt;</div>
+                        </div>
+                        <div class="msg-line">
+                            <span class="tag-notice">通知</span>
+                            <div>
+                                <div class="mt">审核通过 《示例短剧02》</div>
+                                <div class="mtime">2026-09-07 16:16:45</div>
+                            </div>
+                        </div>
+                        <div class="msg-line">
+                            <span class="tag-notice">通知</span>
+                            <div>
+                                <div class="mt">运营退回待修改 《示例短剧02》</div>
+                                <div class="mtime">2026-09-07 16:14:58</div>
+                            </div>
+                        </div>
+                        <div class="msg-line">
+                            <span class="tag-notice">通知</span>
+                            <div>
+                                <div class="mt">商务审核通过，待运营审核 《示例短剧02》</div>
+                                <div class="mtime">2026-09-07 16:12:40</div>
+                            </div>
+                        </div>
+                        <div class="msg-line">
+                            <span class="tag-notice">通知</span>
+                            <div>
+                                <div class="mt">商务退回待修改 《示例短剧02》</div>
+                                <div class="mtime">2026-09-07 16:11:02</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ---------- 短剧管理 ---------- -->
+            <div class="page hidden" id="page-drama">
+                <div class="panel tall">
+                    <div class="filter-bar">
+                        <div class="filter-item">
+                            <label>短剧名称</label>
+                            <input class="ipt-sm" style="width:168px" placeholder="请输入短剧名称">
+                        </div>
+                        <div class="filter-item">
+                            <label>类型</label>
+                            <select class="sel-sm"><option>全部</option><option>动漫短剧</option><option>真人短剧</option></select>
+                        </div>
+                        <div class="filter-item">
+                            <label>审核状态</label>
+                            <select class="sel-sm"><option>全部</option><option>待提审</option><option>审核中</option><option>审核通过</option><option>需修改</option><option>审核不通过</option></select>
+                        </div>
+                        <div class="filter-item">
+                            <label>男女频</label>
+                            <select class="sel-sm"><option>全部</option><option>男频</option><option>女频</option></select>
+                        </div>
+                        <div class="filter-item">
+                            <label>创建时间</label>
+                            <div class="date-range">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+                                <input placeholder="开始日期">
+                                <span class="sep">至</span>
+                                <input placeholder="结束日期">
+                            </div>
+                        </div>
+                        <div class="filter-actions">
+                            <div class="btn btn-primary">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+                                搜索
+                            </div>
+                            <div class="btn btn-plain">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12a8 8 0 018-8c3 0 5.6 1.7 7 4"/><path d="M20 4v4h-4"/><path d="M20 12a8 8 0 01-8 8c-3 0-5.6-1.7-7-4"/><path d="M4 20v-4h4"/></svg>
+                                重置
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="toolbar">
+                        <div class="btn btn-primary" style="height:34px;padding:0 18px" onclick="openCreate()">创建短剧</div>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table class="grid">
+                            <thead>
+                                <tr>
+                                    <th style="width:210px">封面</th>
+                                    <th style="width:400px">短剧名称(别名)</th>
+                                    <th style="width:200px">类型</th>
+                                    <th style="width:70px">集数</th>
+                                    <th style="width:110px">上传状态</th>
+                                    <th style="width:120px"><span class="th-tip">审核状态<span class="tip-dot">?<span class="tip-pop"><b>待提审：</b>请完成上传后，在此页面点击查看剧集发起提审。<br><b>审核中：</b>请等待审核结果。<br><b>审核通过：</b>平台统一发布此短剧。<br><b>审核不通过：</b>平台拒绝发布，无需修改。<br><b>待修改：</b>存在问题需要修改，请参考审核意见。</span></span></span></th>
+                                    <th style="width:100px">男女频</th>
+                                    <th style="width:160px">创建时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dramaTbody">
+                                <tr>
+                                    <td>
+                                        <div class="cover"><span class="badge"></span><div class="t1">DEMO COVER</div><div class="t2">SAMPLE ART</div></div>
+                                    </td>
+                                    <td><span class="drama-name" id="lgNm1">示例短剧01 (示例别名01)</span></td>
+                                    <td>动漫短剧</td>
+                                    <td id="lgEp1">3</td>
+                                    <td id="lgUp1">上传完成</td>
+                                    <td class="st-wait" id="lgSt1">待提审</td>
+                                    <td>男频</td>
+                                    <td>2026-09-14 15:46:15</td>
+                                    <td>
+                                        <div class="ops" id="lgOps1"><a onclick="openLegacyForm('l1')">修改</a><a onclick="openLegacy('l1')">查看剧集</a><a onclick="copyLegacy('l1')">复制</a><a>删除</a></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="cover"><span class="badge"></span><div class="t1">DEMO COVER</div><div class="t2">SAMPLE ART</div></div>
+                                    </td>
+                                    <td><span class="drama-name" id="lgNm2">示例短剧02 (示例别名02)</span></td>
+                                    <td>动漫短剧</td>
+                                    <td id="lgEp2">1</td>
+                                    <td id="lgUp2">上传完成</td>
+                                    <td class="st-pass" id="lgSt2">审核通过</td>
+                                    <td>女频</td>
+                                    <td>2026-09-07 16:07:26</td>
+                                    <td>
+                                        <div class="ops" id="lgOps2"><a onclick="openLegacyForm('l2')">详情</a><a onclick="openLegacy('l2')">查看剧集</a><a onclick="copyLegacy('l2')">复制</a></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="cover"><span class="badge"></span><div class="t1">DEMO COVER</div><div class="t2">SAMPLE ART</div></div>
+                                    </td>
+                                    <td><span class="drama-name" id="lgNm3">示例短剧03 (示例别名03)</span></td>
+                                    <td>真人短剧</td>
+                                    <td id="lgEp3">3</td>
+                                    <td id="lgUp3">上传完成</td>
+                                    <td class="st-bad" id="lgSt3">待修改</td>
+                                    <td>女频</td>
+                                    <td>2026-09-16 10:22:08</td>
+                                    <td>
+                                        <div class="ops" id="lgOps3"><a onclick="openLegacyForm('l3')">修改</a><a onclick="openLegacy('l3')">查看剧集</a><a onclick="copyLegacy('l3')">复制</a><a onclick="showAdvice('l3')">审核意见</a></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="cover"><span class="badge"></span><div class="t1">DEMO COVER</div><div class="t2">SAMPLE ART</div></div>
+                                    </td>
+                                    <td><span class="drama-name" id="lgNm4">示例短剧04 (示例别名04)</span></td>
+                                    <td>动漫短剧</td>
+                                    <td id="lgEp4">2</td>
+                                    <td id="lgUp4">上传完成</td>
+                                    <td class="st-bad" id="lgSt4">审核不通过</td>
+                                    <td>男频</td>
+                                    <td>2026-09-12 14:05:41</td>
+                                    <td>
+                                        <div class="ops" id="lgOps4"><a onclick="openLegacyForm('l4')">详情</a><a onclick="openLegacy('l4')">查看剧集</a><a onclick="copyLegacy('l4')">复制</a><a onclick="showAdvice('l4')">审核意见</a></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pager">
+                        <span>共 <span id="dramaTotal">4</span> 条</span>
+                        <select class="sel-sm"><option>10条/页</option><option>20条/页</option><option>50条/页</option></select>
+                        <span class="pg-btn">‹</span>
+                        <span class="pg-btn cur">1</span>
+                        <span class="pg-btn">›</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ---------- 账号信息 ---------- -->
+            <div class="page hidden" id="page-account">
+                <div class="panel tall" style="padding:20px 24px">
+                    <div class="info-card" style="border:1px solid #f2f3f5">
+                        <div class="info-head"><div class="info-title">账号信息</div></div>
+                        <div class="info-grid">
+                            <div class="info-field"><label>手机号</label><p>-</p></div>
+                            <div class="info-field"><label>账号类型</label><p>企业</p></div>
+                        </div>
+                    </div>
+
+                    <div class="info-card" style="border:1px solid #f2f3f5;margin-bottom:0">
+                        <div class="info-head">
+                            <div class="info-head-left">
+                                <div class="info-title">认证信息</div>
+                                <span class="badge-pass">✓ 认证通过</span>
+                            </div>
+                            <span class="link-blue">查看认证信息</span>
+                        </div>
+                        <div class="info-grid">
+                            <div class="info-field"><label>公司名称</label><p>示例传媒A有限公司</p></div>
+                            <div class="info-field"><label>统一社会信用代码</label><p>12345678AA12A12A12</p></div>
+                            <div class="info-field"><label>银行账号</label><p>1234***********1234</p></div>
+                            <div class="info-field"><label>开户行</label><p>示例银行</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ---------- 消息中心 ---------- -->
+            <div class="page hidden" id="page-message">
+                <div class="panel tall">
+                    <div class="page-head">
+                        <div class="page-title">消息中心</div>
+                        <div class="btn btn-soft">全部已读</div>
+                    </div>
+
+                    <div class="tabs">
+                        <div class="tab active" onclick="switchTab(this)">全部</div>
+                        <div class="tab" onclick="switchTab(this)">审核通知</div>
+                        <div class="tab" onclick="switchTab(this)">平台通知</div>
+                    </div>
+
+                    <div class="notice-list">
+                        <div class="notice-row">
+                            <div><div class="nt green">审核通过　《示例短剧02》</div></div>
+                            <div class="ntime">2026-09-07 16:51:43</div>
+                        </div>
+                        <div class="notice-row unread">
+                            <div>
+                                <div class="nt">运营退回待修改　《示例短剧02》</div>
+                                <div class="nsub">审核意见-运营退回-修改建议</div>
+                            </div>
+                            <div class="ntime">2026-09-07 16:51:43</div>
+                        </div>
+                        <div class="notice-row">
+                            <div><div class="nt">商务审核通过，待运营审核　《示例短剧02》</div></div>
+                            <div class="ntime">2026-09-07 16:51:43</div>
+                        </div>
+                        <div class="notice-row unread">
+                            <div>
+                                <div class="nt">商务退回待修改　《示例短剧02》</div>
+                                <div class="nsub">示例审核意见-商务驳回-需修改</div>
+                            </div>
+                            <div class="ntime">2026-09-07 16:11:23</div>
+                        </div>
+                    </div>
+
+                    <div class="pager">
+                        <span>共 4 条</span>
+                        <select class="sel-sm"><option>20条/页</option><option>50条/页</option></select>
+                        <span class="pg-btn">‹</span>
+                        <span class="pg-btn cur">1</span>
+                        <span class="pg-btn">›</span>
+                    </div>
+                </div>
+            </div>
+
+        <!-- ==================== 添加短剧（三步） ==================== -->
+        <div class="create-page hidden" id="createPage">
+            <div class="cp-header">
+                <div class="cp-back" onclick="closeCreate()">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+                    返回
+                </div>
+                <div class="cp-vline"></div>
+                <div class="cp-title" id="cpTitle">添加短剧</div>
+
+                <div class="steps3" id="cpSteps">
+                    <div class="inner">
+                        <div class="st-node cur" id="stNode1">
+                            <div class="st-circle">1</div>
+                            <div class="st-name">步骤 1</div>
+                            <div class="st-sub">创建基本信息</div>
+                        </div>
+                        <div class="st-line" id="stLine1"></div>
+                        <div class="st-node todo" id="stNode2">
+                            <div class="st-circle">2</div>
+                            <div class="st-name">步骤 2</div>
+                            <div class="st-sub">物料上传</div>
+                        </div>
+                        <div class="st-line" id="stLine2"></div>
+                        <div class="st-node" id="stNode3">
+                            <div class="st-circle">3</div>
+                            <div class="st-name">步骤 3</div>
+                            <div class="st-sub">上传完成</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cp-actions" id="cpActions">
+                    <div class="btn-lg primary" onclick="cpNext()">下一步</div>
+                </div>
+            </div>
+
+            <!-- ---------- 步骤1：基本信息 / 角色信息 / 制作团队 ---------- -->
+            <div class="cp-body" id="cpStep1">
+                <div class="cp-form">
+                    <!-- ===== 基本信息 ===== -->
+                    <div class="cp-sec-title" id="sec-basic">基本信息</div>
+
+                    <div class="fr">
+                        <div class="fr-label">短剧类型</div>
+                        <div class="fr-body">
+                            <div class="type-cards" id="typeCards">
+                                <div class="type-card2" data-type="live" onclick="cpSelectType(this)">
+                                    <div class="tc-check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg></div>
+                                    <div class="tc-pic live">
+                                        <b>真人短剧</b>
+                                        <span>ZHENRENDUANJU</span>
+                                        <div class="tc-figs"><i style="height:62px"></i><i style="height:78px"></i></div>
+                                    </div>
+                                    <div class="tc-name">真人演员实拍</div>
+                                </div>
+                                <div class="type-card2 on" data-type="anime" onclick="cpSelectType(this)">
+                                    <div class="tc-check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg></div>
+                                    <div class="tc-pic anime">
+                                        <b>动漫短剧</b>
+                                        <span>DONGMANDUANJU</span>
+                                        <div class="tc-figs"><i style="height:56px"></i><i style="height:70px"></i><i style="height:60px"></i></div>
+                                    </div>
+                                    <div class="tc-name">AIGC制作生成</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fr">
+                        <div class="fr-label"><span class="req">*</span>短剧名称</div>
+                        <div class="fr-body">
+                            <div class="ipt-wrap">
+                                <input class="cp-ipt" id="f_name" placeholder="输入短剧名称" maxlength="100" oninput="cnt(this,'c_name',100)">
+                                <span class="cp-count" id="c_name">0/100</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fr">
+                        <div class="fr-label">短剧别名</div>
+                        <div class="fr-body">
+                            <div class="ipt-wrap">
+                                <input class="cp-ipt" id="f_alias" placeholder="输入短剧别名" maxlength="100" oninput="cnt(this,'c_alias',100)">
+                                <span class="cp-count" id="c_alias">0/100</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fr">
+                        <div class="fr-label"><span class="req">*</span>语种</div>
+                        <div class="fr-body">
+                            <select class="cp-sel placeholder" id="f_lang" onchange="this.classList.toggle('placeholder', !this.value)">
+                                <option value="">请选择语种</option>
+                                <option>中文繁体</option><option>英语</option><option>韩语</option><option>日语</option>
+                                <option>印尼语</option><option>泰语</option><option>越南语</option><option>菲律宾语</option>
+                                <option>他加禄语</option><option>葡萄牙语</option><option>西班牙语</option><option>阿拉伯语</option>
+                                <option>德语</option><option>法语</option><option>意大利语</option><option>波兰语</option><option>土耳其语</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="fr" id="row_sub">
+                        <div class="fr-label"><span class="req">*</span>漫剧细分类型</div>
+                        <div class="fr-body">
+                            <div class="ipt-wrap">
+                                <input class="cp-ipt" id="f_sub" placeholder="请输入漫剧细分类型，如仿真人剧、2D动态漫、3D漫、沙雕漫、动态小说漫、静态小说漫、速推AI剧、转绘AI剧 等" maxlength="50" oninput="cnt(this,'c_sub',50)">
+                                <span class="cp-count" id="c_sub">0/50</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fr">
+                        <div class="fr-label"><span class="req">*</span>是否18+</div>
+                        <div class="fr-body">
+                            <div class="rd-group">
+                                <label class="rd"><input type="radio" name="adult18"> 是</label>
+                                <label class="rd"><input type="radio" name="adult18" checked> 否</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fr">
+                        <div class="fr-label"><span class="req">*</span>发行年份</div>
+                        <div class="fr-body">
+                            <div class="icon-ipt">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+                                <input id="f_year" value="2026">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fr">
+                        <div class="fr-label"><span class="req">*</span>短剧封面</div>
+                        <div class="fr-body">
+                            <div class="cov-wrap" id="u_cover">
+                                <div class="cov-list" id="covList"></div>
+                                <div class="up-box cov-add" id="covAdd" onclick="pickCovers()"
+                                     ondragover="covDragOver(event)" ondragleave="covDragLeave(event)" ondrop="covDrop(event)">
+                                    <span class="cov-plus">+</span>
+                                    <span class="cov-tip">点击或拖拽到此上传</span>
+                                </div>
+                            </div>
+                            <div class="up-name" id="coverName"></div>
+                            <div class="fr-hint">支持扩展名：jpg、jpeg、png；尺寸必须 600*800，单张最大 10MB；最少1张、最多3张，首位为主图，可拖拽调整顺序</div>
+                        </div>
+                    </div>
+
+                    <div class="fr">
+                        <div class="fr-label">封面PSD文件</div>
+                        <div class="fr-body">
+                            <div class="btn-lg primary" id="u_psd" style="height:38px;font-size:14px" onclick="pickPsd(this)">点击上传</div>
+                            <div id="psdFile"></div>
+                            <div class="fr-hint">支持扩展名：psd，最大1024MB</div>
+                        </div>
+                    </div>
+
+                    <div class="fr">
+                        <div class="fr-label"><span class="req">*</span>短剧简介</div>
+                        <div class="fr-body">
+                            <div class="ipt-wrap">
+                                <textarea class="cp-ta" id="f_desc" placeholder="100-480字，包含主角姓名，准确叙述短剧内容" maxlength="480" oninput="cnt(this,'c_desc',480)"></textarea>
+                                <span class="ta-count" id="c_desc">0/480</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fr">
+                        <div class="fr-label"><span class="req">*</span>性别偏好</div>
+                        <div class="fr-body">
+                            <div class="rd-group">
+                                <label class="rd"><input type="radio" name="genderPref" checked> 男</label>
+                                <label class="rd"><input type="radio" name="genderPref"> 女</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fr">
+                        <div class="fr-label"><span class="req">*</span>是否首发<span class="q-tip" title="首发：本平台独家首播；次新：其他平台已播出较短时间；二轮：已在其他平台完整播出">?</span></div>
+                        <div class="fr-body">
+                            <div class="rd-group" id="g_first">
+                                <label class="rd"><input type="radio" name="firstRel"> 首发</label>
+                                <label class="rd"><input type="radio" name="firstRel"> 次新</label>
+                                <label class="rd"><input type="radio" name="firstRel"> 二轮</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fr">
+                        <div class="fr-label"><span class="req">*</span>首发平台</div>
+                        <div class="fr-body">
+                            <div class="ipt-wrap">
+                                <input class="cp-ipt" id="f_platform" placeholder="请输入首发平台" maxlength="100" oninput="cnt(this,'c_platform',100)">
+                                <span class="cp-count" id="c_platform">0/100</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fr" id="row_paypoint">
+                        <div class="fr-label"><span class="req">*</span>付费卡点</div>
+                        <div class="fr-body">
+                            <input class="cp-ipt" id="f_paypoint" placeholder="开始收费集数" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'')">
+                        </div>
+                    </div>
+
+                    <div class="fr">
+                        <div class="fr-label"><span class="req">*</span>付费上架时间</div>
+                        <div class="fr-body">
+                            <div class="icon-ipt wide" id="box_payTime">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></svg>
+                                <input id="f_payTime" placeholder="选择付费上架时间（北京时间）" onfocus="this.type='datetime-local'" onblur="if(!this.value)this.type='text'">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fr">
+                        <div class="fr-label"><span class="req">*</span>免费上架时间</div>
+                        <div class="fr-body">
+                            <div class="inline-row">
+                                <div class="icon-ipt wide" id="box_freeTime">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></svg>
+                                    <input id="f_freeTime" placeholder="选择免费上架时间（北京时间）" onfocus="this.type='datetime-local'" onblur="if(!this.value)this.type='text'">
+                                </div>
+                                <label class="cb"><input type="checkbox" id="f_afterPay" onchange="toggleAfterPay()"> 付费上架后</label>
+                                <div class="num-spin">
+                                    <input id="f_afterDays" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'')" disabled>
+                                    <div class="sp"><span onclick="spin(1)">▲</span><span onclick="spin(-1)">▼</span></div>
+                                </div>
+                                <span style="font-size:14px;color:var(--text-2)">天可转免</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fr">
+                        <div class="fr-label"><span class="req">*</span>独家类型</div>
+                        <div class="fr-body">
+                            <div class="rd-group">
+                                <label class="rd"><input type="radio" name="excl" checked> 独家</label>
+                                <label class="rd"><input type="radio" name="excl"> 非独家</label>
+                                <label class="rd"><input type="radio" name="excl"> 双独家</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fr">
+                        <div class="fr-label"><span class="req">*</span>版权生效范围</div>
+                        <div class="fr-body">
+                            <div class="rd-group" id="g_scope">
+                                <label class="rd"><input type="checkbox" name="scope"> 免费</label>
+                                <label class="rd"><input type="checkbox" name="scope"> 付费</label>
+                                <label class="rd"><input type="checkbox" name="scope"> 不包含小程序</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== 角色信息 ===== -->
+                    <div class="cp-sec-title gap" id="sec-role">角色信息</div>
+                    <div id="roleList"></div>
+                    <div class="btn-add-role" onclick="addRole()">+ 添加角色</div>
+
+                    <!-- ===== 制作团队 ===== -->
+                    <div class="cp-sec-title gap" id="sec-team">制作团队</div>
+
+                    <div class="fr">
+                        <div class="fr-label"><span class="req">*</span>签约主体</div>
+                        <div class="fr-body">
+                            <div class="ipt-wrap">
+                                <input class="cp-ipt" id="f_signer" placeholder="请输入签约主体" maxlength="50" oninput="cnt(this,'c_signer',50)">
+                                <span class="cp-count" id="c_signer">0/50</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fr">
+                        <div class="fr-label">是否原创</div>
+                        <div class="fr-body">
+                            <div class="rd-group">
+                                <label class="rd"><input type="radio" name="orig" onchange="toggleAdapt(true)"> 改编</label>
+                                <label class="rd"><input type="radio" name="orig" checked onchange="toggleAdapt(false)"> 原创</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="adaptRows" class="hidden">
+                        <div class="fr">
+                            <div class="fr-label">改编书籍名称</div>
+                            <div class="fr-body">
+                                <div class="ipt-wrap">
+                                    <input class="cp-ipt" id="f_book" placeholder="请输入改编书籍名称" maxlength="100" oninput="cnt(this,'c_book',100)">
+                                    <span class="cp-count" id="c_book">0/100</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fr">
+                            <div class="fr-label">改编书籍作者</div>
+                            <div class="fr-body">
+                                <div class="ipt-wrap">
+                                    <input class="cp-ipt" id="f_author" placeholder="请输入改编书籍作者" maxlength="50" oninput="cnt(this,'c_author',50)">
+                                    <span class="cp-count" id="c_author">0/50</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fr">
+                            <div class="fr-label">书籍版权方</div>
+                            <div class="fr-body">
+                                <div class="ipt-wrap">
+                                    <input class="cp-ipt" id="f_bookOwner" placeholder="请输入书籍版权方" maxlength="100" oninput="cnt(this,'c_bookOwner',100)">
+                                    <span class="cp-count" id="c_bookOwner">0/100</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fr">
+                        <div class="fr-label">制作机构</div>
+                        <div class="fr-body">
+                            <div class="ipt-wrap">
+                                <input class="cp-ipt" id="f_studio" placeholder="请输入制作机构" maxlength="50" oninput="cnt(this,'c_studio',50)">
+                                <span class="cp-count" id="c_studio">0/50</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fr">
+                        <div class="fr-label">制作人</div>
+                        <div class="fr-body">
+                            <div class="ipt-wrap">
+                                <input class="cp-ipt" id="f_producer" placeholder="请输入制作人真实姓名" maxlength="50" oninput="cnt(this,'c_producer',50)">
+                                <span class="cp-count" id="c_producer">0/50</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fr">
+                        <div class="fr-label">导演</div>
+                        <div class="fr-body">
+                            <div class="ipt-wrap">
+                                <input class="cp-ipt" id="f_director" placeholder="请输入导演真实姓名" maxlength="50" oninput="cnt(this,'c_director',50)">
+                                <span class="cp-count" id="c_director">0/50</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fr">
+                        <div class="fr-label">编剧</div>
+                        <div class="fr-body">
+                            <div class="ipt-wrap">
+                                <input class="cp-ipt" id="f_writer" placeholder="请输入编剧姓名" maxlength="50" oninput="cnt(this,'c_writer',50)">
+                                <span class="cp-count" id="c_writer">0/50</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cp-anchor">
+                    <a class="active" data-sec="sec-basic" onclick="jumpSec('sec-basic')">基本信息</a>
+                    <a data-sec="sec-role" onclick="jumpSec('sec-role')">角色信息</a>
+                    <a data-sec="sec-team" onclick="jumpSec('sec-team')">制作团队</a>
+                </div>
+            </div>
+
+            <!-- ---------- 步骤2：物料上传 ---------- -->
+            <div class="cp-body hidden" id="cpStep2">
+                <div class="cp-form" style="padding: 0 42px;">
+                    <div class="tabs-card">
+                        <div class="tabs-card-hd">
+                            <div class="tc on" data-mat="cheng" onclick="switchMat(this)">成片上传</div>
+                            <div class="tc" data-mat="video" onclick="switchMat(this)">无字幕上传</div>
+                            <div class="tc" data-mat="srt" onclick="switchMat(this)">字幕上传</div>
+                            <div class="tc" data-mat="audio" onclick="switchMat(this)">音频上传</div>
+                        </div>
+                        <div class="tabs-card-bd">
+                            <div class="dropzone" id="dropzone" onclick="pickMat()">
+                                <svg class="dz-cloud" viewBox="0 0 48 40" fill="#c8ccd4">
+                                    <path d="M38 16.2A11 11 0 0 0 17.6 12A8.5 8.5 0 0 0 6 20.2A8.6 8.6 0 0 0 9.4 34h27.8A9.6 9.6 0 0 0 38 16.2z"/>
+                                    <path d="M24 30V16l-6 6h12l-6-6" fill="#fff"/>
+                                </svg>
+                                <div class="dz-text">将文件拖到此处，或<span>点击上传</span></div>
+                            </div>
+                            <div class="dz-ext">仅支持扩展名：<span id="matExt">.mp4</span>（其他格式不予上传）</div>
+                            <div class="up-stat" id="upStat">共0个文件，<span class="ok">0</span> 成功，<span class="bad">0</span> 失败，0上传中，0等待</div>
+                            <div class="file-list" id="fileList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ---------- 步骤3：上传完成 ---------- -->
+            <div class="cp-body hidden" id="cpStep3">
+                <div class="cp-form" style="padding: 0 42px;">
+                    <div class="done-box">
+                        <h3>已完成批量上传</h3>
+                        <p>请在短剧管理列表中查看</p>
+                        <div class="btns"><div class="btn-lg primary" style="height:34px;font-size:14px;padding:0 18px" onclick="openEpisodes()">去查看</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 剧集信息（已上传所有集） ==================== -->
+        <div class="create-page hidden" id="episodePage">
+            <div class="cp-header">
+                <div class="cp-back" onclick="closeEpisodes()">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+                    返回
+                </div>
+                <div class="cp-vline"></div>
+                <div class="cp-title">剧集信息</div>
+            </div>
+
+            <div style="padding: 18px 42px 60px;">
+                <div class="ep-head">
+                    <div>
+                        <div class="ep-name" id="epName">示例短剧01</div>
+                        <div class="ep-meta">
+                            <span>上传集数：<span id="epCount">0</span></span>
+                            <span>审核状态：<span id="epStatus">待提审</span></span>
+                        </div>
+                    </div>
+                    <div class="ep-btns">
+                        <div class="btn-lg primary" style="height:34px;font-size:14px;padding:0 16px" onclick="openUpload()">继续上传</div>
+                        <div style="position:relative">
+                            <div class="btn-lg primary" style="height:34px;font-size:14px;padding:0 16px" onclick="submitReview(event)">发起提审</div>
+                            <div class="popconfirm hidden" id="pcReview" onclick="event.stopPropagation()">
+                                <div class="pc-msg"><span class="pc-ico">i</span>确认要发起提审吗？</div>
+                                <div class="pc-acts">
+                                    <span class="pc-cancel" onclick="hidePc()">取消</span>
+                                    <span class="pc-ok" onclick="doReview()">确认提审</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tabs-card" style="margin-top:20px">
+                    <div class="tabs-card-hd">
+                        <div class="tc on" data-ep="cheng" onclick="switchEp(this)">成片</div>
+                        <div class="tc" data-ep="video" onclick="switchEp(this)">无字幕视频</div>
+                        <div class="tc" data-ep="srt" onclick="switchEp(this)">字幕</div>
+                        <div class="tc" data-ep="audio" onclick="switchEp(this)">音轨</div>
+                    </div>
+                    <div class="tabs-card-bd" style="padding:20px 22px">
+                        <div class="table-wrap">
+                            <table class="grid">
+                                <thead>
+                                    <tr>
+                                        <th style="width:130px">顺序</th>
+                                        <th style="width:200px" id="epColMedia">视频</th>
+                                        <th>文件名称</th>
+                                        <th style="width:150px" id="epColDur">时长</th>
+                                        <th style="width:170px">大小</th>
+                                        <th style="width:200px">更新时间</th>
+                                        <th style="width:290px">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="epTbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- 通用弹窗 -->
+<div class="mask hidden" id="mask" onclick="closeDlg()">
+    <div class="dlg" onclick="event.stopPropagation()">
+        <div class="dlg-hd"><b id="dlgTitle">提示</b><i onclick="closeDlg()">×</i></div>
+        <div class="dlg-bd" id="dlgBody"></div>
+        <div class="dlg-ft" id="dlgFoot"></div>
+    </div>
+</div>
+
+<script>
+    /* 登录 */
+    function doLogin() {
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('appPage').classList.remove('hidden');
+        go('drama');
+    }
+    function logout() {
+        document.getElementById('appPage').classList.add('hidden');
+        document.getElementById('loginPage').classList.remove('hidden');
+    }
+
+    /* 菜单切换 */
+    /* 创建页 / 剧集页现在位于 .main 内部，顶栏与左侧菜单常驻 */
+    function hidePages() {
+        document.querySelectorAll('.page').forEach(function (el) { el.classList.add('hidden'); });
+    }
+    function backToDrama() {
+        document.getElementById('page-drama').classList.remove('hidden');
+        document.querySelectorAll('.nav-item').forEach(function (el) {
+            el.classList.toggle('active', el.dataset.page === 'drama');
+        });
+    }
+    function go(page) {
+        /* 从创建页 / 剧集页点左侧菜单时，先把它们收起来 */
+        document.getElementById('createPage').classList.add('hidden');
+        document.getElementById('episodePage').classList.add('hidden');
+        document.querySelectorAll('.page').forEach(function (el) { el.classList.add('hidden'); });
+        document.getElementById('page-' + page).classList.remove('hidden');
+        document.querySelectorAll('.nav-item').forEach(function (el) {
+            el.classList.toggle('active', el.dataset.page === page);
+        });
+        document.getElementById('userMenu').classList.add('hidden');
+        window.scrollTo(0, 0);
+    }
+
+    /* 侧边栏收起 */
+    function toggleSidebar() {
+        var sb = document.getElementById('sidebar');
+        sb.classList.toggle('collapsed');
+        document.getElementById('collapseBtn').textContent = sb.classList.contains('collapsed') ? '›' : '‹';
+    }
+
+    /* 用户下拉 */
+    function toggleUserMenu(e) {
+        e.stopPropagation();
+        document.getElementById('userMenu').classList.toggle('hidden');
+    }
+    document.addEventListener('click', function () {
+        document.getElementById('userMenu').classList.add('hidden');
+        var pc = document.getElementById('pcReview');
+        if (pc) pc.classList.add('hidden');
+    });
+
+    /* 消息中心 Tab */
+    function switchTab(el) {
+        el.parentNode.querySelectorAll('.tab').forEach(function (t) { t.classList.remove('active'); });
+        el.classList.add('active');
+    }
+
+    /* 验证码（随机字符 + 干扰线） */
+    function drawCaptcha() {
+        var chars = 'abcdefghijkmnpqrstuvwxyz23456789';
+        var text = '';
+        for (var i = 0; i < 4; i++) text += chars[Math.floor(Math.random() * chars.length)];
+        var parts = '';
+        for (var j = 0; j < 4; j++) {
+            var x = 14 + j * 24, y = 30 + (Math.random() * 8 - 4), rot = Math.random() * 40 - 20;
+            parts += '<text x="' + x + '" y="' + y + '" font-size="22" font-family="serif" font-style="italic" ' +
+                     'fill="#2b3ad6" transform="rotate(' + rot.toFixed(1) + ' ' + x + ' ' + y + ')">' + text[j] + '</text>';
+        }
+        var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="118" height="46">' +
+                  '<rect width="118" height="46" fill="#eef1f7"/>' +
+                  '<path d="M4 34 Q30 12 58 30 T114 20" stroke="#7f8cf5" fill="none" stroke-width="1.2"/>' +
+                  parts + '</svg>';
+        document.getElementById('captcha').innerHTML = svg;
+    }
+    drawCaptcha();
+    document.getElementById('captcha').addEventListener('click', drawCaptcha);
+
+    /* ==================== 添加短剧 ==================== */
+    var cpStep = 1;
+    var cpMode = 'create';   /* create = 添加短剧三步；edit = 继续上传（标题「修改」） */
+
+    /* 已创建的短剧记录（第一步点「下一步」后即入列表，提审前可反复修改） */
+    var DRAFTS = [];
+    var draftSeq = 0;
+    var curDraft = null;
+    var PRISTINE = null;                                             /* 空白表单快照 */
+    var COVERS = [];                                                 /* 短剧封面 1~3 张 [{url,name,w,h,size}] */
+    var DEMO_MATS = { cheng: [], video: [], srt: [], audio: [] };     /* 两条演示数据用的物料库 */
+
+    function findDraft(id) {
+        for (var i = 0; i < DRAFTS.length; i++) if (DRAFTS[i].id === id) return DRAFTS[i];
+        return null;
+    }
+    /* 把物料库指向某条记录，之后上传的文件都进这条记录 */
+    function bindMats(holder) {
+        MAT.cheng.list = holder.mats.cheng;
+        MAT.video.list = holder.mats.video;
+        MAT.srt.list = holder.mats.srt;
+        MAT.audio.list = holder.mats.audio;
+    }
+
+    /* ---- 表单快照 / 回填 ---- */
+    function formEls() {
+        return Array.prototype.slice.call(document.querySelectorAll('#cpStep1 input, #cpStep1 textarea, #cpStep1 select'));
+    }
+    function snapshotForm() {
+        return {
+            type: curType(),
+            roleCount: document.querySelectorAll('#roleList .role-card').length,
+            vals: formEls().map(function (el) {
+                return (el.type === 'radio' || el.type === 'checkbox') ? el.checked : el.value;
+            }),
+            covers: COVERS.map(function (c) { return { url: c.url, name: c.name, size: c.size, w: c.w, h: c.h }; }),
+            psd: { html: document.getElementById('psdFile').innerHTML, done: !!document.getElementById('u_psd').dataset.done },
+            photos: Array.prototype.map.call(document.querySelectorAll('#roleList .role-photo'), function (p) {
+                return { html: p.innerHTML, done: p.classList.contains('done') };
+            })
+        };
+    }
+    function restoreForm(s) {
+        clearCpErr();
+        /* 类型 + 角色卡数量先还原，保证字段顺序一致 */
+        document.querySelectorAll('.type-card2').forEach(function (c) {
+            c.classList.toggle('on', c.dataset.type === s.type);
+        });
+        renderRoles();
+        var base = document.querySelectorAll('#roleList .role-card').length;
+        for (var i = base; i < s.roleCount; i++) addRole();
+        /* 字段值 */
+        formEls().forEach(function (el, i) {
+            var v = s.vals[i];
+            if (v === undefined) return;
+            if (el.type === 'radio' || el.type === 'checkbox') el.checked = v; else el.value = v;
+        });
+        /* 封面 / PSD / 角色照片 */
+        COVERS = (s.covers || []).map(function (c) { return { url: c.url, name: c.name, size: c.size, w: c.w, h: c.h }; });
+        renderCovers();
+        document.getElementById('psdFile').innerHTML = s.psd.html;
+        if (s.psd.done) document.getElementById('u_psd').dataset.done = '1'; else delete document.getElementById('u_psd').dataset.done;
+        document.querySelectorAll('#roleList .role-photo').forEach(function (p, i) {
+            var ph = s.photos[i];
+            if (!ph) return;
+            p.innerHTML = ph.html;
+            p.classList.toggle('done', ph.done);
+        });
+        /* 联动状态 + 字数统计 */
+        document.getElementById('row_paypoint').classList.remove('hidden');
+        toggleSubType();
+        var ap = document.getElementById('f_afterPay').checked;
+        document.getElementById('f_afterDays').disabled = !ap;
+        document.getElementById('f_freeTime').disabled = ap;
+        document.getElementById('adaptRows').classList.toggle('hidden', !document.querySelectorAll('input[name="orig"]')[0].checked);
+        var lang = document.getElementById('f_lang');
+        lang.classList.toggle('placeholder', !lang.value);
+        fixTimeType();
+        syncCounts();
+    }
+    /* 刷新所有 0/100 之类的计数 */
+    function syncCounts() {
+        document.querySelectorAll('#cpStep1 .cp-ipt[maxlength], #cpStep1 .cp-ta[maxlength]').forEach(function (el) {
+            var c = el.nextElementSibling;
+            if (c && (c.classList.contains('cp-count') || c.classList.contains('ta-count'))) {
+                c.textContent = el.value.length + '/' + el.getAttribute('maxlength');
+            }
+        });
+    }
+
+    /* ---- 列表渲染：动态记录插在演示数据前面 ---- */
+    function renderDrafts() {
+        var tb = document.getElementById('dramaTbody');
+        tb.querySelectorAll('tr.dyn').forEach(function (tr) { tr.remove(); });
+        var html = '';
+        DRAFTS.forEach(function (d) {
+            var eps = d.mats.cheng.length;
+            var canEdit = d.status === '待提审';
+            html += '<tr class="dyn">' +
+                '<td>' + (d.cover ? '<img class="cover-img" src="' + d.cover + '" alt="">' :
+                    '<div class="cover"><span class="badge"></span><div class="t1">NO COVER</div></div>') + '</td>' +
+                '<td><span class="drama-name">' + d.name + (d.alias ? ' (' + d.alias + ')' : '') + '</span></td>' +
+                '<td>' + d.type + '</td>' +
+                '<td>' + eps + '</td>' +
+                '<td>' + (eps ? '上传完成' : '未上传') + '</td>' +
+                '<td class="' + stCls(d.status) + '">' + d.status + '</td>' +
+                '<td>' + d.gender + '</td>' +
+                '<td>' + d.time + '</td>' +
+                '<td><div class="ops">' +
+                    (canEdit ? '<a onclick="openCreate(' + d.id + ')">修改</a>' : '<a onclick="openCreate(' + d.id + ')">详情</a>') +
+                    '<a onclick="openEpisodes(null,' + d.id + ')">查看剧集</a>' +
+                    '<a onclick="copyDraft(' + d.id + ')">复制</a>' +
+                    (canEdit ? '<a onclick="delDraft(' + d.id + ')">删除</a>' : '') +
+                '</div></td>' +
+            '</tr>';
+        });
+        tb.insertAdjacentHTML('afterbegin', html);
+        document.getElementById('dramaTotal').textContent = 4 + DRAFTS.length;
+    }
+    /* ===== 演示数据 → 步骤一表单回填 ===== */
+    /* 演示用图片：生成一张带文字的渐变图（data URI），不依赖外部文件 */
+    function demoImg(w, h, txt, c1, c2) {
+        var s = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '">' +
+            '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">' +
+            '<stop offset="0" stop-color="' + c1 + '"/><stop offset="1" stop-color="' + c2 + '"/></linearGradient></defs>' +
+            '<rect width="100%" height="100%" fill="url(#g)"/>' +
+            '<text x="50%" y="50%" fill="#ffffff" font-size="' + Math.round(w / 7) + '" font-family="sans-serif"' +
+            ' text-anchor="middle" dominant-baseline="middle">' + txt + '</text></svg>';
+        return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s);
+    }
+    var DEMO_PIC = [['#ff7a9c', '#fa2256'], ['#7aa7ff', '#3b5bdb'], ['#ffc46b', '#f08c00']];
+
+    function radioPick(name, idx) {
+        document.querySelectorAll('input[name="' + name + '"]').forEach(function (r, i) { r.checked = (i === idx); });
+    }
+    function setVal(id, v) {
+        var el = document.getElementById(id);
+        if (el) el.value = (v === undefined || v === null) ? '' : v;
+    }
+    /* 把一份演示数据写进步骤一表单（基本信息 / 角色信息 / 制作团队 全量） */
+    function fillForm(f) {
+        /* 短剧类型 → 角色卡结构先定下来 */
+        document.querySelectorAll('.type-card2').forEach(function (c) { c.classList.toggle('on', c.dataset.type === f.type); });
+        renderRoles();
+        var roles = f.roles || [];
+        while (document.querySelectorAll('#roleList .role-card').length < roles.length) addRole();
+        /* 基本信息 */
+        setVal('f_name', f.name); setVal('f_alias', f.alias); setVal('f_lang', f.lang); setVal('f_sub', f.sub);
+        setVal('f_year', f.year); setVal('f_desc', f.desc);
+        setVal('f_platform', f.platform); setVal('f_paypoint', f.paypoint);
+        setVal('f_payTime', f.payTime); setVal('f_freeTime', f.freeTime); setVal('f_afterDays', f.afterDays);
+        document.getElementById('f_afterPay').checked = !!f.afterPay;
+        radioPick('adult18', f.adult); radioPick('genderPref', f.gender);
+        radioPick('firstRel', f.first); radioPick('excl', f.excl); radioPick('orig', f.orig);
+        document.querySelectorAll('input[name="scope"]').forEach(function (c, i) { c.checked = !!(f.scope && f.scope[i]); });
+        /* 制作团队 */
+        setVal('f_book', f.book); setVal('f_author', f.author); setVal('f_bookOwner', f.bookOwner);
+        setVal('f_signer', f.signer); setVal('f_studio', f.studio);
+        setVal('f_producer', f.producer); setVal('f_director', f.director); setVal('f_writer', f.writer);
+        /* 短剧封面（600*800）+ 封面 PSD */
+        COVERS = [];
+        for (var i = 0; i < (f.covers || 0); i++) {
+            var c = DEMO_PIC[i % DEMO_PIC.length];
+            COVERS.push({
+                url: demoImg(600, 800, (i === 0 ? '主图' : '封面' + (i + 1)), c[0], c[1]),
+                name: 'cover_0' + (i + 1) + '.jpg', size: '826KB', w: 600, h: 800
+            });
+        }
+        renderCovers();
+        var psdBtn = document.getElementById('u_psd');
+        if (f.psd) {
+            psdBtn.dataset.done = '1';
+            document.getElementById('psdFile').innerHTML =
+                '<span class="file-chip">📄 ' + f.psd + ' <i>86.40MB</i><em title="删除" onclick="clearPsd()">×</em></span>';
+        } else {
+            delete psdBtn.dataset.done;
+            document.getElementById('psdFile').innerHTML = '';
+        }
+        /* 角色卡 */
+        document.querySelectorAll('#roleList .role-card').forEach(function (card, i) {
+            var r = roles[i];
+            if (!r) return;
+            var nm = card.querySelector('.role-name');
+            if (nm) nm.value = r.name || '';
+            [['rn-en', r.en], ['rn-cn', r.cn], ['rn-tw', r.tw]].forEach(function (p) {
+                var el = card.querySelector('.' + p[0]);
+                if (el) el.value = p[1] || '';
+            });
+            var ta = card.querySelector('textarea');
+            if (ta) ta.value = r.desc || '';
+            var ph = card.querySelector('.role-photo');
+            if (ph && r.photo) {
+                var pc = DEMO_PIC[i % DEMO_PIC.length];
+                ph.classList.add('done');
+                ph.innerHTML = '<img src="' + demoImg(300, 300, '照片', pc[0], pc[1]) + '" alt="">' +
+                    '<span class="up-del" title="删除" onclick="clearImage(event, this)">×</span>';
+                ph.dataset.file = 'role_0' + (i + 1) + '.jpg';
+            }
+        });
+        /* 联动状态 + 字数统计 */
+        toggleSubType();
+        document.getElementById('row_paypoint').classList.remove('hidden');
+        document.getElementById('f_afterDays').disabled = !f.afterPay;
+        document.getElementById('f_freeTime').disabled = !!f.afterPay;
+        toggleAdapt(f.orig === 0);
+        var lang = document.getElementById('f_lang');
+        lang.classList.toggle('placeholder', !lang.value);
+        fixTimeType();
+        syncCounts();
+    }
+    /* 两个时间控件：有值时切成 datetime-local，显示成日期控件而不是带 T 的文本 */
+    function fixTimeType() {
+        ['f_payTime', 'f_freeTime'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.type = (el.value && el.value.indexOf('T') > 0) ? 'datetime-local' : 'text';
+        });
+    }
+    /* 演示剧单的表单快照：首次打开时按 form 数据生成，之后沿用（改完能记住） */
+    function lgSnap(lg) {
+        if (lg.snap) return lg.snap;
+        restoreForm(PRISTINE);
+        fillForm(lg.form);
+        lg.snap = snapshotForm();
+        /* 表单当前不可见时把 DOM 复位，避免残留在「添加短剧」里 */
+        if (document.getElementById('createPage').classList.contains('hidden')) restoreForm(PRISTINE);
+        return lg.snap;
+    }
+    /* 列表「修改 / 详情」：打开该条剧单的完整基本信息表单 */
+    function openLegacyForm(key) {
+        var lg = LEGACY[key];
+        if (!lg) return;
+        cpMode = 'create';
+        curDraft = null;
+        cpLegacy = lg;
+        curLegacy = lg;
+        seedLegacy(lg);
+        hidePages();
+        document.getElementById('episodePage').classList.add('hidden');
+        document.getElementById('createPage').classList.remove('hidden');
+        document.getElementById('cpSteps').classList.remove('hidden');
+        document.getElementById('cpTitle').textContent = lg.status === '待提审' ? '修改短剧' : '短剧详情';
+        restoreForm(lgSnap(lg));
+        bindMats(lg);
+        cpGoStep(1);
+        window.scrollTo(0, 0);
+    }
+
+    /* 复制时一律不带的文件：封面图、PSD、主角照片（成片 / 无字幕视频 / 字幕 / 音轨在新记录里本就为空） */
+    function stripFiles(snap) {
+        snap.covers = [];
+        snap.psd = { html: '', done: false };
+        snap.photos = [];
+        return snap;
+    }
+    /* 复制剧单：仅复制「基本信息」文字字段，剧名追加「-副本」；
+       封面图 / PSD / 主角照片 / 成片 / 无字幕视频 / 字幕 / 音轨文件一律不复制 */
+    function copyDraft(id) {
+        var src = findDraft(id);
+        if (!src) { dlg('无法复制', '⚠️', '该剧单为演示数据，暂不支持复制'); return; }
+        var copy = stripFiles(JSON.parse(JSON.stringify({
+            type: src.snap.type, roleCount: src.snap.roleCount, vals: src.snap.vals
+        })));
+        /* 剧名追加「-副本」 */
+        var nm = (src.name || '未命名短剧') + '-副本';
+        var nameIdx = formEls().indexOf(document.getElementById('f_name'));
+        if (nameIdx >= 0) copy.vals[nameIdx] = nm;
+        finishCopy(copy, nm, src.alias, src.type, src.gender);
+    }
+
+    /* 复制存量剧：文字类基本信息整套复制，物料同样不复制 */
+    function copyLegacy(key) {
+        var lg = LEGACY[key];
+        if (!lg || !PRISTINE) return;
+        var snap = stripFiles(JSON.parse(JSON.stringify(lgSnap(lg))));
+        var nm = lg.name + '-副本';
+        var nameIdx = formEls().indexOf(document.getElementById('f_name'));
+        if (nameIdx >= 0) snap.vals[nameIdx] = nm;
+        finishCopy(snap, nm, lg.alias || '', lg.type, lg.gender);
+    }
+    /* 复制后统一落库 + 提示 */
+    function finishCopy(snap, name, alias, type, gender) {
+        var d = {
+            id: ++draftSeq,
+            time: nowStr(),
+            status: '待提审',
+            snap: snap,
+            name: name,
+            alias: alias,
+            type: type,
+            gender: gender,
+            cover: '',                                            /* 封面需重新上传 */
+            mats: { cheng: [], video: [], srt: [], audio: [] }    /* 物料需重新上传 */
+        };
+        DRAFTS.unshift(d);
+        renderDrafts();
+        dlg('已复制', '✅', '已生成「' + d.name + '」',
+            '基本信息文字已复制；封面图、PSD、主角照片、成片、无字幕视频、字幕、音轨文件均未复制，需重新上传',
+            '<div class="btn-lg plain" onclick="closeDlg()">稍后处理</div>' +
+            '<div class="btn-lg primary" onclick="closeDlg();openCreate(' + d.id + ')">去编辑</div>');
+    }
+    function delDraft(id) {
+        var d = findDraft(id);
+        dlg('删除确认', '⚠️', '确定删除《' + d.name + '》？', '删除后该短剧及已上传物料将一并移除',
+            '<div class="btn-lg plain" onclick="closeDlg()">取消</div>' +
+            '<div class="btn-lg primary" onclick="closeDlg();doDelDraft(' + id + ')">确认删除</div>');
+    }
+    function doDelDraft(id) {
+        DRAFTS = DRAFTS.filter(function (d) { return d.id !== id; });
+        if (curDraft && curDraft.id === id) curDraft = null;
+        renderDrafts();
+    }
+
+    function openCreate(id) {
+        cpMode = 'create';
+        cpLegacy = null;
+        curDraft = (id === undefined || id === null) ? null : findDraft(id);
+        hidePages();
+        document.getElementById('episodePage').classList.add('hidden');
+        document.getElementById('createPage').classList.remove('hidden');
+        document.getElementById('cpSteps').classList.remove('hidden');
+        if (curDraft) {
+            document.getElementById('cpTitle').textContent = curDraft.status === '待提审' ? '修改短剧' : '短剧详情';
+            restoreForm(curDraft.snap);
+            bindMats(curDraft);
+        } else {
+            document.getElementById('cpTitle').textContent = '添加短剧';
+            if (PRISTINE) restoreForm(PRISTINE);
+            bindMats({ mats: { cheng: [], video: [], srt: [], audio: [] } });
+        }
+        cpGoStep(1);
+    }
+    function closeCreate() {
+        if (cpMode === 'edit') { upHolder = null; openEpisodes(); return; }   /* 未确认就返回：丢弃本次缓冲 */
+        if (cpLegacy) { syncLegacyRow(cpLegacy); cpLegacy = null; }
+        document.getElementById('createPage').classList.add('hidden');
+        backToDrama();
+        renderDrafts();
+        window.scrollTo(0, 0);
+    }
+
+    /* 字数统计 */
+    function cnt(el, id, max) {
+        document.getElementById(id).textContent = el.value.length + '/' + max;
+    }
+
+    /* 短剧类型：真人剧角色需填三语真名 + 照片必填；漫剧仅角色名必填 */
+    function cpSelectType(el) {
+        document.querySelectorAll('.type-card2').forEach(function (c) { c.classList.remove('on'); });
+        el.classList.add('on');
+        document.getElementById('typeCards').classList.remove('err');
+        toggleSubType();
+        renderRoles();
+    }
+    /* 漫剧细分类型：仅动漫短剧（AI漫剧）展示；切到真人剧时清空已填内容 */
+    function toggleSubType() {
+        var anime = curType() === 'anime';
+        document.getElementById('row_sub').classList.toggle('hidden', !anime);
+        if (!anime) {
+            document.getElementById('f_sub').value = '';
+            cnt(document.getElementById('f_sub'), 'c_sub', 50);
+        }
+    }
+    function curType() {
+        var on = document.querySelector('.type-card2.on');
+        return on ? on.dataset.type : 'anime';
+    }
+
+    /* 角色信息：真人剧 = 男主 + 女主（均必填）；漫剧 = 角色 1 */
+    function roleCard(title, removable) {
+        var live = curType() === 'live';
+        var realName = live ? (
+            '<div class="role-grid">' +
+                roleInput('真实姓名（英文）', 'English name', true, 'rn-en') +
+                roleInput('真实姓名（中文简体）', '中文简体姓名', true, 'rn-cn') +
+            '</div>' +
+            '<div class="role-grid">' +
+                roleInput('真实姓名（中文繁体）', '中文繁體姓名', true, 'rn-tw') +
+            '</div>') : '';
+        return '' +
+        '<div class="role-card"' + (removable ? ' data-extra="1"' : '') + '>' +
+            '<div class="role-card-head">' +
+                '<span class="role-card-title">' + title + '</span>' +
+                (removable ? '<span class="role-del" onclick="this.closest(\'.role-card\').remove();renumberRoles()">删除</span>' : '') +
+            '</div>' +
+            '<div class="role-field">' +
+                '<label><span class="req">*</span>角色名</label>' +
+                '<div class="ipt-wrap">' +
+                    '<input class="cp-ipt role-name" placeholder="请输入角色名" maxlength="50" oninput="this.nextElementSibling.textContent=this.value.length+\'/50\'">' +
+                    '<span class="cp-count">0/50</span>' +
+                '</div>' +
+            '</div>' +
+            realName +
+            '<div class="role-field">' +
+                '<label>简介 <span class="opt">（选填）</span></label>' +
+                '<div class="ipt-wrap">' +
+                    '<textarea class="cp-ta" placeholder="请输入简介" maxlength="500" oninput="this.nextElementSibling.textContent=this.value.length+\'/500\'"></textarea>' +
+                    '<span class="ta-count">0/500</span>' +
+                '</div>' +
+            '</div>' +
+            '<div class="role-field" style="margin-bottom:0">' +
+                '<label>' + (live ? '<span class="req">*</span>照片' : '照片 <span class="opt">（选填）</span>') + '</label>' +
+                '<div class="up-box small role-photo" onclick="pickImage(this, \'.jpg,.jpeg,.png\')">+</div>' +
+                '<div class="fr-hint">支持 jpg、jpeg、png，尺寸300*300，最大10MB</div>' +
+            '</div>' +
+        '</div>';
+    }
+    function roleInput(label, ph, req, cls) {
+        return '<div class="role-field">' +
+            '<label>' + (req ? '<span class="req">*</span>' : '') + label + '</label>' +
+            '<div class="ipt-wrap"><input class="cp-ipt ' + cls + '" placeholder="' + ph + '" maxlength="50" oninput="this.nextElementSibling.textContent=this.value.length+\'/50\'"><span class="cp-count">0/50</span></div>' +
+        '</div>';
+    }
+    function renderRoles() {
+        var list = document.getElementById('roleList');
+        if (curType() === 'live') {
+            // 真人短剧：固定男主、女主两张卡，均为必填，不可删除
+            list.innerHTML = roleCard('男主', false) + roleCard('女主', false);
+        } else {
+            list.innerHTML = roleCard('角色 1', false);
+        }
+    }
+    function addRole() {
+        var list = document.getElementById('roleList');
+        list.insertAdjacentHTML('beforeend', roleCard('角色 ' + (list.children.length + 1), true));
+    }
+    function renumberRoles() {
+        /* 男主/女主为固定卡，只重排后面追加的角色 */
+        var extra = document.querySelectorAll('#roleList .role-card[data-extra="1"]');
+        var base = document.querySelectorAll('#roleList .role-card').length - extra.length;
+        extra.forEach(function (card, i) {
+            card.querySelector('.role-card-title').textContent = '角色 ' + (base + i + 1);
+        });
+    }
+    renderRoles();
+    PRISTINE = snapshotForm();   /* 记录空白表单，便于「创建短剧」时清空 */
+
+    /* ===== 真实文件选择 ===== */
+    /* 弹出系统文件选择框 */
+    function pickFile(accept, multiple, cb) {
+        var ip = document.createElement('input');
+        ip.type = 'file';
+        ip.accept = accept;
+        ip.multiple = !!multiple;
+        ip.style.display = 'none';
+        document.body.appendChild(ip);
+        ip.addEventListener('change', function () {
+            if (ip.files && ip.files.length) cb(ip.files);
+            ip.remove();
+        });
+        ip.click();
+    }
+    function fmtSize(b) {
+        if (b < 1024) return b + 'B';
+        if (b < 1024 * 1024) return (b / 1024).toFixed(0) + 'KB';
+        if (b < 1024 * 1024 * 1024) return (b / 1024 / 1024).toFixed(2) + 'MB';
+        return (b / 1024 / 1024 / 1024).toFixed(2) + 'GB';
+    }
+    function extOf(name) {
+        var m = name.toLowerCase().match(/\.[a-z0-9]+$/);
+        return m ? m[0] : '';
+    }
+
+    /* ===== 物料格式强制校验 =====
+       图片一律 jpg / jpeg / png，视频一律 mp4，字幕一律 srt，音轨 mp3，PSD psd。
+       校验扩展名 + 浏览器识别出的文件类型（防止改后缀），不通过的文件一律不予上传。 */
+    var FMT = {
+        image: { exts: ['.jpg', '.jpeg', '.png'], mime: /^image\//, label: '图片' },
+        video: { exts: ['.mp4'], mime: /^video\//, label: '视频' },
+        srt:   { exts: ['.srt'], mime: null, label: '字幕' },
+        audio: { exts: ['.mp3'], mime: /^audio\//, label: '音轨' },
+        psd:   { exts: ['.psd'], mime: null, label: 'PSD 文件' }
+    };
+    /* 允许的扩展名文案：.jpg,.jpeg,.png → jpg / jpeg / png */
+    function fmtText(kind) {
+        return FMT[kind].exts.map(function (e) { return e.slice(1); }).join(' / ');
+    }
+    /* accept 属性值，用于系统文件框预过滤 */
+    function fmtAccept(kind) { return FMT[kind].exts.join(','); }
+    /* 校验单个文件：通过返回空串，不通过返回原因 */
+    function fmtCheck(f, kind) {
+        var c = FMT[kind];
+        if (c.exts.indexOf(extOf(f.name)) < 0) return '格式不支持，仅支持 ' + fmtText(kind);
+        if (c.mime && f.type && !c.mime.test(f.type)) return '文件内容不是' + c.label + '，请勿修改扩展名后上传';
+        return '';
+    }
+    /* 批量校验：返回 { pass: [文件], bad: ['名称：原因'] } */
+    function fmtFilter(files, kind) {
+        var pass = [], bad = [];
+        Array.prototype.forEach.call(files, function (f) {
+            var why = fmtCheck(f, kind);
+            if (why) bad.push(f.name + '：' + why); else pass.push(f);
+        });
+        return { pass: pass, bad: bad };
+    }
+    /* 统一的格式不通过提示 */
+    function fmtAlert(kind, bad) {
+        if (!bad.length) return;
+        dlg('文件格式不符', '⚠️', '有 ' + bad.length + ' 个文件未通过格式校验，已忽略',
+            '仅支持 ' + fmtText(kind) + '　|　' + bad.join('；'),
+            '<div class="btn-lg plain" onclick="closeDlg()">知道了</div>');
+    }
+    /* 读取音视频时长（秒） */
+    function readDuration(file, cb) {
+        var v = document.createElement('video');
+        var url = URL.createObjectURL(file);
+        var done = false;
+        v.preload = 'metadata';
+        v.onloadedmetadata = function () {
+            done = true;
+            var s = v.duration;
+            URL.revokeObjectURL(url);
+            cb(isFinite(s) && s > 0 ? Math.round(s) : 0);
+        };
+        v.onerror = function () { if (!done) { done = true; URL.revokeObjectURL(url); cb(0); } };
+        v.src = url;
+        setTimeout(function () { if (!done) { done = true; cb(0); } }, 3000);
+    }
+    /* 时长格式：hms → 00:01:40，ms → 1:40 */
+    function fmtDur(sec, mode) {
+        if (!sec) return '—';
+        var h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60, p = function (n) { return String(n).padStart(2, '0'); };
+        return mode === 'hms' ? p(h) + ':' + p(m) + ':' + p(s) : m + ':' + p(s);
+    }
+    /* 抓取视频首帧做缩略图 */
+    function grabPoster(file, cb) {
+        var v = document.createElement('video');
+        var url = URL.createObjectURL(file);
+        var fired = false;
+        function shot() {
+            if (fired) return;
+            fired = true;
+            var data = '';
+            try {
+                var c = document.createElement('canvas');
+                var w = v.videoWidth || 120, h = v.videoHeight || 160;
+                c.width = 160; c.height = Math.round(160 * h / w);
+                c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+                data = c.toDataURL('image/jpeg', 0.7);
+            } catch (e) { data = ''; }
+            URL.revokeObjectURL(url);
+            cb(data);
+        }
+        v.preload = 'auto';
+        v.muted = true;
+        v.onloadeddata = function () {
+            try { v.currentTime = Math.min(0.3, (v.duration || 1) / 3); } catch (e) { shot(); }
+        };
+        v.onseeked = shot;
+        v.onerror = function () { if (!fired) { fired = true; URL.revokeObjectURL(url); cb(''); } };
+        v.src = url;
+        setTimeout(function () { if (!fired) { fired = true; cb(''); } }, 5000);
+    }
+
+    /* 图片上传：封面（jpg/jpeg，600*800，10MB） / 角色照片（jpg/jpeg/png，300*300，10MB） */
+    /* ===== 短剧封面：最多 3 张，首位为主图，可拖拽排序 / 单张删除 ===== */
+    var COVER_MAX = 3;
+    var COVER_ACCEPT = FMT.image.exts;
+
+    function pickCovers() {
+        if (COVERS.length >= COVER_MAX) return;
+        pickFile(fmtAccept('image'), true, function (files) { covAccept(files); });
+    }
+    /* 拖拽上传 */
+    function covDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('dragover'); }
+    function covDragLeave(e) { e.currentTarget.classList.remove('dragover'); }
+    function covDrop(e) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('dragover');
+        var fl = e.dataTransfer && e.dataTransfer.files;
+        if (fl && fl.length) covAccept(Array.prototype.slice.call(fl));
+    }
+    /* 收文件：校验格式/大小/数量 */
+    /* 收文件：格式 / 大小 / 尺寸(600*800) 三项在上传时即校验，不符合的直接不予添加 */
+    function covAccept(files) {
+        files = Array.prototype.slice.call(files);   /* FileList 没有 forEach */
+        var room = COVER_MAX - COVERS.length;
+        if (room <= 0) { dlg('数量已达上限', '⚠️', '最多上传 ' + COVER_MAX + ' 张封面', '请先删除已有封面再上传'); return; }
+        var bad = [], pend = [], over = 0;
+        files.forEach(function (f) {
+            var why = fmtCheck(f, 'image');                     /* 格式强制校验：jpg / jpeg / png */
+            if (why) { bad.push(f.name + '：' + why); return; }
+            if (f.size > 10 * 1024 * 1024) { bad.push(f.name + '：' + fmtSize(f.size) + '，超过 10MB'); return; }
+            pend.push(f);
+        });
+        if (pend.length > room) { over = pend.length - room; pend = pend.slice(0, room); }
+        if (!pend.length) { covReport(bad, over); return; }
+        var left = pend.length;
+        pend.forEach(function (f) {
+            var url = URL.createObjectURL(f);
+            var im = new Image();
+            im.onload = function () {
+                if (im.naturalWidth !== 600 || im.naturalHeight !== 800) {
+                    bad.push(f.name + '：' + im.naturalWidth + '×' + im.naturalHeight + '，尺寸必须为 600*800');
+                    URL.revokeObjectURL(url);
+                } else if (COVERS.length < COVER_MAX) {
+                    COVERS.push({ url: url, name: f.name, size: fmtSize(f.size), w: im.naturalWidth, h: im.naturalHeight });
+                }
+                if (--left === 0) { renderCovers(); covReport(bad, over); }
+            };
+            im.onerror = function () {
+                bad.push(f.name + '：图片无法读取');
+                URL.revokeObjectURL(url);
+                if (--left === 0) { renderCovers(); covReport(bad, over); }
+            };
+            im.src = url;
+        });
+    }
+    function covReport(bad, over) {
+        if (over) bad = bad.concat(['另有 ' + over + ' 张超出 ' + COVER_MAX + ' 张上限，未添加']);
+        if (!bad.length) return;
+        dlg('部分封面未添加', '⚠️', '有 ' + bad.length + ' 个文件不符合要求，已忽略',
+            bad.join('；'), '<div class="btn-lg plain" onclick="closeDlg()">知道了</div>');
+    }
+
+    function renderCovers() {
+        var html = '';
+        COVERS.forEach(function (c, i) {
+            var size = c.w ? (c.w + '×' + c.h) : '读取中';
+            html += '<div class="cov-item' + (i === 0 ? ' main' : '') + '" draggable="true" data-i="' + i + '"' +
+                ' title="' + c.name + '（' + size + '，' + c.size + '）"' +
+                ' ondragstart="covDragStart(event,' + i + ')" ondragend="covDragEnd(event)"' +
+                ' ondragover="covItemOver(event)" ondragleave="covItemLeave(event)" ondrop="covItemDrop(event,' + i + ')">' +
+                '<img src="' + c.url + '" alt="">' +
+                (i === 0 ? '<span class="cov-badge">主图</span>' : '<span class="cov-idx">' + (i + 1) + '</span>') +
+                '<span class="cov-del" title="删除" onclick="covDel(event,' + i + ')">×</span>' +
+            '</div>';
+        });
+        document.getElementById('covList').innerHTML = html;
+        /* 达到上限隐藏上传入口 */
+        document.getElementById('covAdd').classList.toggle('hidden', COVERS.length >= COVER_MAX);
+        var wrap = document.getElementById('u_cover');
+        wrap.classList.toggle('done', COVERS.length > 0);
+        if (COVERS.length) wrap.classList.remove('err');
+        /* 尺寸提示 */
+        var tip = document.getElementById('coverName');
+        tip.className = 'up-name';
+        tip.textContent = COVERS.length ? ('已上传 ' + COVERS.length + '/' + COVER_MAX + ' 张，首位为主图') : '';
+    }
+    function covDel(e, i) {
+        e.stopPropagation();
+        COVERS.splice(i, 1);
+        renderCovers();
+    }
+    /* 拖拽排序 */
+    var covFrom = -1;
+    function covDragStart(e, i) { covFrom = i; e.currentTarget.classList.add('drag'); if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'; }
+    function covDragEnd(e) { e.currentTarget.classList.remove('drag'); covFrom = -1; }
+    function covItemOver(e) { if (covFrom >= 0) { e.preventDefault(); e.currentTarget.classList.add('over'); } }
+    function covItemLeave(e) { e.currentTarget.classList.remove('over'); }
+    function covItemDrop(e, i) {
+        e.preventDefault(); e.stopPropagation();
+        e.currentTarget.classList.remove('over');
+        if (covFrom < 0 || covFrom === i) return;
+        var moved = COVERS.splice(covFrom, 1)[0];
+        COVERS.splice(i, 0, moved);
+        covFrom = -1;
+        renderCovers();
+    }
+
+    function pickImage(box, accept) {
+        pickFile(fmtAccept('image'), false, function (files) {
+            var f = files[0];
+            var why = fmtCheck(f, 'image');                     /* 角色照片：jpg / jpeg / png */
+            if (why) {
+                dlg('文件格式不支持', '⚠️', '仅支持 ' + fmtText('image') + ' 格式', f.name + '：' + why);
+                return;
+            }
+            if (f.size > 10 * 1024 * 1024) {
+                dlg('文件过大', '⚠️', '图片最大 10MB', '当前文件：' + fmtSize(f.size));
+                return;
+            }
+            var url = URL.createObjectURL(f);
+            box.classList.add('done');
+            box.classList.remove('err');
+            box.innerHTML = '<img src="' + url + '" alt=""><span class="up-del" title="删除" onclick="clearImage(event, this)">×</span>';
+            box.dataset.file = f.name;
+            /* 读取真实尺寸并提示是否符合要求 */
+            var img = box.querySelector('img');
+            var tip = null;   /* 短剧封面已改为多图组件，这里只服务角色照片 */
+            var showInfo = function () {
+                var txt = f.name + '（' + img.naturalWidth + '×' + img.naturalHeight + '，' + fmtSize(f.size) + '）';
+                if (tip) {
+                    var fit = img.naturalWidth === 600 && img.naturalHeight === 800;
+                    tip.className = 'up-name' + (fit ? '' : ' warn');
+                    tip.textContent = fit ? txt : txt + ' 建议尺寸 600*800';
+                } else {
+                    box.title = txt;
+                }
+            };
+            if (img.complete && img.naturalWidth) showInfo(); else img.onload = showInfo;
+        });
+    }
+    function clearImage(e, el) {
+        e.stopPropagation();
+        var box = el.closest('.up-box');
+        box.classList.remove('done');
+        box.innerHTML = '+';
+        delete box.dataset.file;
+    }
+
+    /* 封面 PSD 文件（psd，1024MB） */
+    function pickPsd(btn) {
+        pickFile(fmtAccept('psd'), false, function (files) {
+            var f = files[0];
+            if (fmtCheck(f, 'psd')) {
+                dlg('文件格式不支持', '⚠️', '仅支持 psd 格式', '当前文件：' + f.name);
+                return;
+            }
+            if (f.size > 1024 * 1024 * 1024) {
+                dlg('文件过大', '⚠️', 'PSD 文件最大 1024MB', '当前文件：' + fmtSize(f.size));
+                return;
+            }
+            btn.dataset.done = '1';
+            document.getElementById('psdFile').innerHTML =
+                '<span class="file-chip">📄 ' + f.name + ' <i>' + fmtSize(f.size) + '</i><em title="删除" onclick="clearPsd()">×</em></span>';
+        });
+    }
+    function clearPsd() {
+        delete document.getElementById('u_psd').dataset.done;
+        document.getElementById('psdFile').innerHTML = '';
+    }
+
+    /* 付费卡点 / 转免 / 改编 联动 */
+    function togglePayPoint() {
+        /* 支付方式字段已移除，付费卡点常驻显示 */
+        document.getElementById('row_paypoint').classList.remove('hidden');
+    }
+    function toggleAfterPay() {
+        var on = document.getElementById('f_afterPay').checked;
+        var days = document.getElementById('f_afterDays');
+        var time = document.getElementById('f_freeTime');
+        days.disabled = !on;
+        time.disabled = on;
+        if (on) { time.value = ''; days.focus(); } else { days.value = ''; }
+    }
+    function spin(d) {
+        var el = document.getElementById('f_afterDays');
+        if (el.disabled) return;
+        var v = parseInt(el.value || '0', 10) + d;
+        el.value = v < 0 ? 0 : v;
+    }
+    function toggleAdapt(show) {
+        document.getElementById('adaptRows').classList.toggle('hidden', !show);
+    }
+
+    /* 右侧锚点 */
+    function jumpSec(id) {
+        var el = document.getElementById(id);
+        window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 120, behavior: 'smooth' });
+    }
+    window.addEventListener('scroll', function () {
+        if (document.getElementById('createPage').classList.contains('hidden')) return;
+        if (cpStep !== 1) return;
+        var secs = ['sec-basic', 'sec-role', 'sec-team'], cur = secs[0];
+        secs.forEach(function (s) {
+            if (document.getElementById(s).getBoundingClientRect().top - 160 <= 0) cur = s;
+        });
+        document.querySelectorAll('.cp-anchor a').forEach(function (a) {
+            a.classList.toggle('active', a.dataset.sec === cur);
+        });
+    });
+
+    /* 步骤切换 */
+    function cpGoStep(n) {
+        cpStep = n;
+        document.getElementById('cpStep1').classList.toggle('hidden', n !== 1);
+        document.getElementById('cpStep2').classList.toggle('hidden', n !== 2);
+        document.getElementById('cpStep3').classList.toggle('hidden', n !== 3);
+        var s1 = document.getElementById('stNode1'), s2 = document.getElementById('stNode2'), s3 = document.getElementById('stNode3');
+        var l1 = document.getElementById('stLine1'), l2 = document.getElementById('stLine2');
+        var act = document.getElementById('cpActions');
+        if (n === 1) {
+            s1.className = 'st-node cur'; s2.className = 'st-node todo'; s3.className = 'st-node';
+            l1.className = 'st-line'; l2.className = 'st-line';
+            act.innerHTML = '<div class="btn-lg primary" onclick="cpNext()">下一步</div>';
+        } else if (n === 2) {
+            s1.className = 'st-node done'; s2.className = 'st-node cur'; s3.className = 'st-node todo';
+            l1.className = 'st-line on'; l2.className = 'st-line';
+            act.innerHTML = '<div class="btn-lg primary" onclick="cpConfirm()">确认</div>';
+            renderUpStat();
+        } else {
+            s1.className = 'st-node done'; s2.className = 'st-node done'; s3.className = 'st-node done';
+            l1.className = 'st-line on'; l2.className = 'st-line on';
+            act.innerHTML = '';
+        }
+        window.scrollTo(0, 0);
+    }
+
+    /* 步骤1 必填校验 */
+    function cpNext() {
+        var miss = [];
+        clearCpErr();
+        function need(ok, el, label) {
+            if (!ok) { if (el) el.classList.add('err'); miss.push(label); }
+        }
+        need(document.getElementById('f_name').value.trim(), document.getElementById('f_name'), '短剧名称');
+        need(document.getElementById('f_lang').value, document.getElementById('f_lang'), '语种');
+        /* 漫剧细分类型：仅动漫短剧时展示且必填 */
+        if (!document.getElementById('row_sub').classList.contains('hidden')) {
+            need(document.getElementById('f_sub').value.trim(), document.getElementById('f_sub'), '漫剧细分类型');
+        }
+        need(COVERS.length > 0, document.getElementById('u_cover'), '短剧封面（至少1张）');
+        need(document.getElementById('f_desc').value.trim(), document.getElementById('f_desc'), '短剧简介');
+        need(document.querySelector('input[name="firstRel"]:checked'), document.getElementById('g_first'), '是否首发');
+        need(document.getElementById('f_platform').value.trim(), document.getElementById('f_platform'), '首发平台');
+        if (!document.getElementById('row_paypoint').classList.contains('hidden')) {
+            need(document.getElementById('f_paypoint').value.trim(), document.getElementById('f_paypoint'), '付费卡点');
+        }
+        need(document.getElementById('f_payTime').value, document.getElementById('box_payTime'), '付费上架时间');
+        var freeOk = document.getElementById('f_freeTime').value ||
+                     (document.getElementById('f_afterPay').checked && document.getElementById('f_afterDays').value);
+        need(freeOk, document.getElementById('box_freeTime'), '免费上架时间');
+        need(document.querySelector('input[name="scope"]:checked'), document.getElementById('g_scope'), '版权生效范围');
+        need(document.getElementById('f_signer').value.trim(), document.getElementById('f_signer'), '签约主体');
+
+        var live = curType() === 'live';
+        document.querySelectorAll('#roleList .role-card').forEach(function (card) {
+            var who = card.querySelector('.role-card-title').textContent;
+            var name = card.querySelector('.role-name');
+            need(name.value.trim(), name, who + '-角色名');
+            if (live) {
+                ['rn-en', 'rn-cn', 'rn-tw'].forEach(function (c) {
+                    var el = card.querySelector('.' + c);
+                    if (el) need(el.value.trim(), el, who + '-真实姓名');
+                });
+                var ph = card.querySelector('.role-photo');
+                need(ph.classList.contains('done'), ph, who + '-照片');
+            }
+        });
+
+        if (miss.length) {
+            dlg('信息未填写完整', '⚠️', '有 ' + miss.length + ' 项必填信息未填写', miss.join('、'),
+                '<div class="btn-lg plain" onclick="closeDlg()">继续填写</div>');
+            var first = document.querySelector('.err');
+            if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+        /* 校验通过：立即写入短剧管理列表（待提审，可反复修改） */
+        saveDraft();
+        cpGoStep(2);
+    }
+    /* 基本信息落库 → 列表出现该条记录 */
+    function saveDraft() {
+        /* 演示剧单：改的是它自己，不新增列表行 */
+        if (cpLegacy) {
+            var lg = cpLegacy;
+            lg.snap = snapshotForm();
+            lg.name = document.getElementById('f_name').value.trim() || lg.name;
+            lg.alias = document.getElementById('f_alias').value.trim();
+            lg.type = curType() === 'live' ? '真人短剧' : '动漫短剧';
+            lg.gender = document.querySelectorAll('input[name="genderPref"]')[0].checked ? '男频' : '女频';
+            var nmCell = document.getElementById('lgNm' + lg.row);
+            if (nmCell) {
+                nmCell.textContent = lg.name + (lg.alias ? ' (' + lg.alias + ')' : '');
+                var tds = nmCell.closest('tr').children;
+                tds[2].textContent = lg.type;        /* 短剧类型 */
+                tds[6].textContent = lg.gender;      /* 性别偏好 */
+            }
+            bindMats(lg);
+            syncLegacyRow(lg);
+            return;
+        }
+        if (!curDraft) {
+            curDraft = {
+                id: ++draftSeq,
+                time: nowStr(),
+                status: '待提审',
+                mats: { cheng: [], video: [], srt: [], audio: [] }
+            };
+            DRAFTS.unshift(curDraft);
+        }
+        var mainCover = COVERS.length ? COVERS[0].url : '';
+        curDraft.snap = snapshotForm();
+        curDraft.name = document.getElementById('f_name').value.trim() || '未命名短剧';
+        curDraft.alias = document.getElementById('f_alias').value.trim();
+        curDraft.type = curType() === 'live' ? '真人短剧' : '动漫短剧';
+        curDraft.gender = document.querySelectorAll('input[name="genderPref"]')[0].checked ? '男频' : '女频';
+        curDraft.cover = mainCover;
+        bindMats(curDraft);
+        renderDrafts();
+    }
+    function clearCpErr() {
+        document.querySelectorAll('#createPage .err').forEach(function (e) { e.classList.remove('err'); });
+    }
+
+    /* ===== 步骤2：物料批量上传 ===== */
+    var MAT = {
+        cheng: { name: '成片', ext: '.mp4', kind: 'video', list: [] },
+        video: { name: '无字幕视频', ext: '.mp4', kind: 'video', list: [] },
+        srt: { name: '字幕', ext: '.srt', kind: 'srt', list: [] },
+        audio: { name: '音轨', ext: '.mp3', kind: 'audio', list: [] }
+    };
+    var curMat = 'cheng';
+
+    function switchMat(el) {
+        el.parentNode.querySelectorAll('.tc').forEach(function (t) { t.classList.remove('on'); });
+        el.classList.add('on');
+        curMat = el.dataset.mat;
+        document.getElementById('matExt').textContent = MAT[curMat].ext;
+        renderUpStat();
+    }
+
+    /* 点击上传：弹系统文件框，可多选（accept 先做一层过滤，落地再强制校验） */
+    function pickMat() {
+        pickFile(fmtAccept(MAT[curMat].kind), true, function (files) { receiveFiles(files); });
+    }
+
+    /* 拖拽上传 */
+    (function () {
+        var dz = document.getElementById('dropzone');
+        ['dragenter', 'dragover'].forEach(function (ev) {
+            dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.add('over'); });
+        });
+        ['dragleave', 'dragend'].forEach(function (ev) {
+            dz.addEventListener(ev, function () { dz.classList.remove('over'); });
+        });
+        dz.addEventListener('drop', function (e) {
+            e.preventDefault();
+            dz.classList.remove('over');
+            if (e.dataTransfer && e.dataTransfer.files.length) receiveFiles(e.dataTransfer.files);
+        });
+    })();
+
+    /* 接收文件：强制校验扩展名 + 文件类型 → 读取真实大小/时长/首帧 → 入列表 */
+    function receiveFiles(files) {
+        var m = MAT[curMat];
+        var r = fmtFilter(files, m.kind);          /* 格式不符的一律不入列表 */
+        r.pass.forEach(function (f) {
+            var item = { name: f.name, size: fmtSize(f.size), sec: 0, poster: '', state: 'ing', time: nowStr() };
+            m.list.push(item);
+            if (m.ext === '.mp4' || m.ext === '.mp3') {
+                readDuration(f, function (s) { item.sec = s; renderMat(); });
+            }
+            if (m.ext === '.mp4') {
+                grabPoster(f, function (p) { item.poster = p; renderMat(); renderEp(); });
+            }
+            /* 模拟上传过程：上传中 → 上传成功 */
+            setTimeout(function () { item.state = 'ok'; renderMat(); }, 500 + Math.random() * 700);
+        });
+        renderMat();
+        fmtAlert(m.kind, r.bad);
+    }
+
+    function delMatFile(i) {
+        MAT[curMat].list.splice(i, 1);
+        renderMat();
+    }
+
+    function nowStr() {
+        var d = new Date(), p = function (n) { return String(n).padStart(2, '0'); };
+        return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+    }
+
+    var ICO_UP = '<svg class="ico" viewBox="0 0 24 24" fill="currentColor" title="更新文件"><path d="M18.5 19a3.5 3.5 0 00.4-6.98A6 6 0 007.6 9.6A4.5 4.5 0 008 19h10.5zM12 17v-6l-3 3h6l-3-3"/></svg>';
+    var ICO_DEL = '<svg class="ico del" viewBox="0 0 24 24" fill="currentColor" title="删除"><path d="M9 3h6l1 2h4v2H4V5h4l1-2zM6 9h12l-1 12H7L6 9z"/></svg>';
+
+    /* 文件条列表 + 底部统计（图1样式） */
+    var SHORT_SEC = 25;   /* 单集时长下限，<= 该值视为短集 */
+    function isShort(f) { return f.sec !== undefined && f.sec !== null && f.sec > 0 && f.sec <= SHORT_SEC; }
+    function durSpanMs(sec) {
+        var t = fmtDur(sec, 'ms');
+        return (sec && sec <= SHORT_SEC) ? '<span class="dur-bad" title="时长不足' + SHORT_SEC + '秒">' + t + '</span>' : t;
+    }
+    function durSpan(sec) {
+        var t = fmtDur(sec, 'hms');
+        return (sec && sec <= SHORT_SEC) ? '<span class="dur-bad" title="时长不足' + SHORT_SEC + '秒">' + t + '</span>' : t;
+    }
+    function renderMat() {
+        var list = MAT[curMat].list, html = '';
+        list.forEach(function (f, i) {
+            html += '<div class="up-row' + (isShort(f) ? ' short' : '') + '">' +
+                '<span class="up-idx">' + (i + 1) + '</span>' +
+                (f.poster ? '<img class="up-thumb" src="' + f.poster + '" alt="">' : '<span class="up-thumb"></span>') +
+                '<div class="up-info">' +
+                    '<div class="up-fname">第' + (i + 1) + '集-' + f.name + '</div>' +
+                    '<div class="up-meta">' + (f.state === 'ok' ? '上传成功' : '上传中') +
+                        ' | 单集时长: ' + durSpan(f.sec) + ' | ' + f.size + ' | 更新时间: ' + f.time + '</div>' +
+                '</div>' +
+                '<div class="up-acts">' +
+                    '<span class="txt-btn" onclick="orderDlg(\'up\',' + i + ')">排序</span>' +
+                    '<span onclick="replaceFile(\'up\',' + i + ')">' + ICO_UP + '</span>' +
+                    '<span onclick="delMatFile(' + i + ')">' + ICO_DEL + '</span>' +
+                '</div>' +
+            '</div>';
+        });
+        document.getElementById('fileList').innerHTML = html;
+        var ok = list.filter(function (f) { return f.state === 'ok'; }).length;
+        var ing = list.length - ok;
+        var shortN = list.filter(isShort).length;
+        document.getElementById('upStat').innerHTML =
+            '共' + list.length + '个文件，<span class="ok">' + ok + '</span> 成功，<span class="bad">0</span> 失败，' + ing + '上传中，0等待' +
+            (shortN ? '　<span class="dur-bad">· ' + shortN + ' 集时长不足 ' + SHORT_SEC + ' 秒</span>' : '');
+    }
+    function renderUpStat() { renderMat(); }
+
+    /* 替换文件（排序条上的云图标 / 剧集信息页的「更新文件」） */
+    function replaceFile(scope, i) {
+        var key = scope === 'up' ? curMat : epTab;
+        pickFile(fmtAccept(MAT[key].kind), false, function (files) {
+            var f = files[0];
+            var why = fmtCheck(f, MAT[key].kind);              /* 更新文件同样强制校验格式 */
+            if (why) {
+                dlg('文件格式不支持', '⚠️', '仅支持 ' + fmtText(MAT[key].kind) + ' 格式', f.name + '：' + why);
+                return;
+            }
+            var item = MAT[key].list[i];
+            item.name = f.name; item.size = fmtSize(f.size); item.time = nowStr(); item.state = 'ok'; item.sec = 0; item.poster = '';
+            if (MAT[key].ext === '.mp4' || MAT[key].ext === '.mp3') readDuration(f, function (s) { item.sec = s; reRender(scope); });
+            if (MAT[key].ext === '.mp4') grabPoster(f, function (p) { item.poster = p; reRender(scope); });
+            reRender(scope);
+        });
+    }
+    function reRender(scope) { if (scope === 'up') renderMat(); else renderEp(); }
+
+    /* 调整顺序弹窗：调整至第 N 集之后（0 = 移到最前） */
+    var orderCtx = null;
+    function orderDlg(scope, i) {
+        var list = scope === 'up' ? MAT[curMat].list : MAT[epTab].list;
+        orderCtx = { scope: scope, i: i };
+        dlgHtml('调整顺序',
+            '<div class="dlg-row" style="margin-bottom:18px">当前顺序：<b>' + (i + 1) + '</b></div>' +
+            '<div class="dlg-row">调整至第' +
+                '<input id="orderInput" class="cp-ipt" style="width:92px;height:34px;padding:0 10px;text-align:center" value="' + (i + 1) + '" inputmode="numeric">' +
+            '集之后</div>' +
+            '<div class="m2">共 ' + list.length + ' 集，填 0 表示移到最前面</div>',
+            '<div class="btn-lg plain" onclick="closeDlg()">取消</div>' +
+            '<div class="btn-lg primary" onclick="doOrder()">确认</div>');
+    }
+    function doOrder() {
+        var list = orderCtx.scope === 'up' ? MAT[curMat].list : MAT[epTab].list;
+        var t = parseInt(document.getElementById('orderInput').value, 10);
+        if (isNaN(t)) t = orderCtx.i + 1;
+        t = Math.max(0, Math.min(list.length, t));
+        var item = list.splice(orderCtx.i, 1)[0];
+        list.splice(orderCtx.i < t ? t - 1 : t, 0, item);
+        closeDlg();
+        reRender(orderCtx.scope);
+        orderCtx = null;
+    }
+
+    /* 步骤2「确认」：成片、无字幕、字幕为必传 */
+    /* 汇总各类物料里的短集，用于提交前二次确认 */
+    function shortSummary() {
+        var out = [];
+        ['cheng', 'video', 'srt', 'audio'].forEach(function (k) {
+            var eps = [];
+            MAT[k].list.forEach(function (f, i) { if (isShort(f)) eps.push('第' + (i + 1) + '集'); });
+            if (eps.length) out.push(MAT[k].name + '：' + eps.join('、'));
+        });
+        return out;
+    }
+
+    function cpConfirm() {
+        var lack = [];
+        if (!MAT.cheng.list.length) lack.push('成片上传');
+        if (!MAT.video.list.length) lack.push('无字幕上传');
+        if (!MAT.srt.list.length) lack.push('字幕上传');
+        if (lack.length) {
+            dlg('物料未上传完整', '⚠️', '有 ' + lack.length + ' 类必传物料未上传', lack.join('、'),
+                '<div class="btn-lg plain" onclick="closeDlg()">继续上传</div>');
+            return;
+        }
+        var sh = shortSummary();
+        if (sh.length) {
+            dlg('存在时长不足 ' + SHORT_SEC + ' 秒的短集', '⚠️',
+                '以下剧集单集时长不足 ' + SHORT_SEC + ' 秒，确认仍要提交吗？', sh.join('；'),
+                '<div class="btn-lg plain" onclick="closeDlg()">返回修改</div>' +
+                '<div class="btn-lg primary" onclick="closeDlg();cpGoStep(3)">确认提交</div>');
+            return;
+        }
+        cpGoStep(3);
+    }
+
+    /* ===== 剧集信息页（已上传所有集） ===== */
+    var epTab = 'cheng';
+    var epStatusText = '待提审';
+
+    /* 列表里四条存量剧也做成记录，提审后状态能回写到行上；
+       form 为「基本信息 / 角色信息 / 制作团队」整套演示数据，点「修改 / 详情」即可看到完整表单 */
+    var LEGACY = {
+        l1: { key: 'l1', name: '示例短剧01', alias: '示例别名01', type: '动漫短剧', gender: '男频', status: '待提审', eps: 3, row: 1,
+              form: {
+                  type: 'anime', name: '示例短剧01', alias: '示例别名01', lang: '中文繁体', sub: '2D动态漫',
+                  adult: 1, year: '2026', gender: 0, first: 0, excl: 0, orig: 1, scope: [true, true, false],
+                  desc: '这是一段示例简介文案，仅用于原型演示，不代表任何真实剧情。示例角色A与示例角色B在示例场景中展开示例故事，用于检查简介字段的展示效果与字数统计。',
+                  platform: 'DramaBox', paypoint: '5', payTime: '2026-09-25T10:00', freeTime: '2026-10-15T10:00',
+                  afterPay: false, afterDays: '',
+                  signer: '示例传媒E有限公司', studio: '示例动画工作室E',
+                  producer: '示例制作人', director: '示例导演', writer: '示例编剧',
+                  covers: 2, psd: '示例短剧01-封面分层.psd',
+                  roles: [
+                      { name: '示例角色A', desc: '示例角色简介A，仅用于原型演示。', photo: true },
+                      { name: '示例角色B', desc: '示例角色简介B，仅用于原型演示。', photo: true }
+                  ]
+              },
+              mats: { cheng: [], video: [], srt: [], audio: [] } },
+        l2: { key: 'l2', name: '示例短剧02', alias: '示例别名02', type: '动漫短剧', gender: '女频', status: '审核通过', eps: 1, row: 2,
+              form: {
+                  type: 'anime', name: '示例短剧02', alias: '示例别名02', lang: '英语', sub: '沙雕漫',
+                  adult: 1, year: '2025', gender: 1, first: 1, excl: 1, orig: 0, scope: [true, true, true],
+                  desc: 'This is a sample synopsis for prototype demo only. It does not describe any real drama. Sample Role A and Sample Role B appear in a sample storyline used to check the layout and the character counter of this field.',
+                  platform: 'DramaBox', paypoint: '3', payTime: '2026-08-20T12:00', freeTime: '',
+                  afterPay: true, afterDays: '7',
+                  book: 'Demo Book A', author: 'Demo Writer A', bookOwner: 'Demo Publishing A',
+                  signer: '示例传媒A有限公司', studio: 'Demo Studio D',
+                  producer: 'Demo Producer', director: 'Demo Director', writer: 'Demo Writer A',
+                  covers: 1, psd: '示例短剧02-cover.psd',
+                  roles: [
+                      { name: 'Role A', desc: 'Sample role description A, for prototype demo only.', photo: true },
+                      { name: 'Role B', desc: 'Sample role description B, for prototype demo only.', photo: true }
+                  ]
+              },
+              mats: { cheng: [], video: [], srt: [], audio: [] } },
+        l3: { key: 'l3', name: '示例短剧03', alias: '示例别名03', type: '真人短剧', gender: '女频', status: '待修改', eps: 3, row: 3,
+              advice: '第 2 集画面有水印，第 3 集片尾音轨缺失，请修改后重新提审。',
+              form: {
+                  type: 'live', name: '示例短剧03', alias: '示例别名03', lang: '中文繁体', sub: '',
+                  adult: 1, year: '2026', gender: 1, first: 0, excl: 2, orig: 0, scope: [true, true, false],
+                  desc: '这是一段示例简介文案，仅用于原型演示，不代表任何真实剧情。示例角色A与示例角色B在示例场景中展开示例故事，用于检查简介字段的展示效果与字数统计。',
+                  platform: 'DramaBox', paypoint: '6', payTime: '2026-09-18T20:00', freeTime: '2026-10-18T20:00',
+                  afterPay: false, afterDays: '',
+                  book: '示例书籍03', author: '示例作者', bookOwner: '示例小说平台',
+                  signer: '示例传媒O有限公司', studio: '示例影视制作O',
+                  producer: '示例制作人', director: '示例导演', writer: '示例编剧',
+                  covers: 3, psd: '示例短剧03-主视觉.psd',
+                  roles: [
+                      { name: '示例角色A', en: 'Role A', cn: '张三', tw: '張三', desc: '示例角色简介A，仅用于原型演示。', photo: true },
+                      { name: '示例角色B', en: 'Role B', cn: '李四', tw: '李四', desc: '示例角色简介B，仅用于原型演示。', photo: true }
+                  ]
+              },
+              mats: { cheng: [], video: [], srt: [], audio: [] } },
+        l4: { key: 'l4', name: '示例短剧04', alias: '示例别名04', type: '动漫短剧', gender: '男频', status: '审核不通过', eps: 2, row: 4,
+              advice: '内容与平台既有剧目高度重复，平台拒绝发布，无需修改。',
+              form: {
+                  type: 'anime', name: '示例短剧04', alias: '示例别名04', lang: '英语', sub: '速推AI剧',
+                  adult: 1, year: '2025', gender: 0, first: 2, excl: 1, orig: 1, scope: [true, false, false],
+                  desc: 'This is a sample synopsis for prototype demo only. It does not describe any real drama. Sample Role A, Sample Role B and Sample Role C appear in a sample storyline used to check the layout of this field.',
+                  platform: 'DramaBox', paypoint: '4', payTime: '2026-07-05T09:30', freeTime: '2026-07-25T09:30',
+                  afterPay: false, afterDays: '',
+                  signer: '示例传媒H有限公司', studio: 'Demo Studio E',
+                  producer: 'Demo Producer', director: 'Demo Director', writer: 'Demo Writer B',
+                  covers: 1, psd: '',
+                  roles: [
+                      { name: 'Role A', desc: 'Sample role description A, for prototype demo only.', photo: true },
+                      { name: 'Role B', desc: 'Sample role description B, for prototype demo only.', photo: true },
+                      { name: 'Role C', desc: 'Sample role description C, for prototype demo only.', photo: false }
+                  ]
+              },
+              mats: { cheng: [], video: [], srt: [], audio: [] } }
+    };
+    var curLegacy = null;
+    var cpLegacy = null;          /* 正在编辑/查看某条存量剧的基本信息表单 */
+
+    /* 查看审核意见（待修改 / 审核不通过） */
+    function showAdvice(key) {
+        var lg = LEGACY[key];
+        if (!lg) return;
+        dlgHtml('审核意见',
+            '<div class="adv-form">' +
+                '<div class="adv-row"><span class="adv-l">剧名</span>' +
+                    '<input class="adv-ipt" value="' + lg.name + '" readonly></div>' +
+                '<div class="adv-row"><span class="adv-l">意见详情</span>' +
+                    '<textarea class="adv-ta" readonly>' + (lg.advice || '') + '</textarea></div>' +
+            '</div>', ' ');
+    }
+
+    function openLegacy(key) {
+        curDraft = null;
+        cpLegacy = null;
+        curLegacy = LEGACY[key];
+        seedLegacy(curLegacy);
+        openEpisodes();
+    }
+    /* 存量剧首次进入时按列表的集数补上演示文件 */
+    function seedLegacy(lg) {
+        if (lg.mats.cheng.length) return;
+        var demo = [
+            { name: '示例视频01.mp4', size: '148.07MB', sec: 82, poster: '', state: 'ok', time: '2026-09-15 14:46:18' },
+            { name: '示例视频02.mp4', size: '148.07MB', sec: 82, poster: '', state: 'ok', time: '2026-09-16 10:02:43' },
+            { name: '示例视频03.mp4', size: '31.69MB', sec: 101, poster: '', state: 'ok', time: '2026-09-16 10:04:18' }
+        ];
+        lg.mats.cheng = demo.slice(0, lg.eps);
+    }
+    /* 审核状态对应的文字颜色 */
+    function stCls(st) {
+        if (st === '审核通过') return 'st-pass';
+        if (st === '审核不通过' || st === '待修改') return 'st-bad';
+        if (st === '待提审') return 'st-wait';
+        return 'st-ing';                       /* 审核中：橙 */
+    }
+
+    /* 把存量剧的集数 / 上传状态 / 审核状态 / 操作列写回列表行 */
+    function syncLegacyRow(lg) {
+        var eps = lg.mats.cheng.length;
+        document.getElementById('lgEp' + lg.row).textContent = eps;
+        document.getElementById('lgUp' + lg.row).textContent = eps ? '上传完成' : '未上传';
+        var st = document.getElementById('lgSt' + lg.row);
+        st.textContent = lg.status;
+        st.className = stCls(lg.status);
+        var ops = document.getElementById('lgOps' + lg.row);
+        var cp = '<a onclick="copyLegacy(\'' + lg.key + '\')">复制</a>';
+        var adv = lg.advice ? '<a onclick="showAdvice(\'' + lg.key + '\')">审核意见</a>' : '';
+        ops.innerHTML = lg.status === '待提审'
+            ? '<a onclick="openLegacyForm(\'' + lg.key + '\')">修改</a><a onclick="openLegacy(\'' + lg.key + '\')">查看剧集</a>' + cp + adv + '<a>删除</a>'
+            : '<a onclick="openLegacyForm(\'' + lg.key + '\')">详情</a><a onclick="openLegacy(\'' + lg.key + '\')">查看剧集</a>' + cp + adv;
+    }
+
+    function openEpisodes(name, id) {
+        if (id !== undefined && id !== null) { curDraft = findDraft(id); curLegacy = null; }
+        else if (name) { curDraft = null; curLegacy = null; }   /* 兜底：只传了名字 */
+        if (curDraft) {
+            bindMats(curDraft);
+            epStatusText = curDraft.status;
+            document.getElementById('epName').textContent = curDraft.name;
+        } else if (curLegacy) {
+            bindMats(curLegacy);
+            epStatusText = curLegacy.status;
+            document.getElementById('epName').textContent = curLegacy.name;
+        } else {
+            bindMats({ mats: DEMO_MATS });
+            if (name) document.getElementById('epName').textContent = name;
+            epStatusText = '待提审';
+            seedEpisodes();
+        }
+        hidePages();
+        document.getElementById('createPage').classList.add('hidden');
+        document.getElementById('episodePage').classList.remove('hidden');
+        renderEp();
+        window.scrollTo(0, 0);
+    }
+    function closeEpisodes() {
+        document.getElementById('episodePage').classList.add('hidden');
+        backToDrama();
+        renderDrafts();
+        if (curLegacy) syncLegacyRow(curLegacy);
+        go('drama');
+    }
+    /* 没有真实上传记录时给几条演示数据，页面不至于空 */
+    function seedEpisodes() {
+        if (MAT.cheng.list.length) return;
+        MAT.cheng.list = [
+            { name: '示例视频01.mp4', size: '148.07MB', sec: 82, poster: '', state: 'ok', time: '2026-09-15 14:46:18' },
+            { name: '示例视频02.mp4', size: '148.07MB', sec: 82, poster: '', state: 'ok', time: '2026-09-16 10:02:43' },
+            { name: '示例视频03.mp4', size: '31.69MB', sec: 101, poster: '', state: 'ok', time: '2026-09-16 10:04:18' }
+        ];
+    }
+    function switchEp(el) {
+        el.parentNode.querySelectorAll('.tc').forEach(function (t) { t.classList.remove('on'); });
+        el.classList.add('on');
+        epTab = el.dataset.ep;
+        renderEp();
+    }
+    function renderEp() {
+        var tb = document.getElementById('epTbody');
+        if (!tb) return;
+        /* 字幕不显示封面列和时长列 */
+        var isSrt = epTab === 'srt';
+        var colMedia = document.getElementById('epColMedia'), colDur = document.getElementById('epColDur');
+        colMedia.style.display = isSrt ? 'none' : '';
+        colDur.style.display = isSrt ? 'none' : '';
+        colMedia.textContent = epTab === 'audio' ? '音轨' : '视频';
+        var list = MAT[epTab].list, html = '';
+        list.forEach(function (f, i) {
+            html += '<tr' + (!isSrt && isShort(f) ? ' class="short"' : '') + '>' +
+                '<td>' + (i + 1) + '</td>' +
+                (isSrt ? '' : '<td>' + (f.poster ? '<img class="vthumb" src="' + f.poster + '" alt="">' : '<span class="vthumb"></span>') + '</td>') +
+                '<td><span class="drama-name">' + f.name + '</span></td>' +
+                (isSrt ? '' : '<td>' + durSpanMs(f.sec) + '</td>') +
+                '<td>' + f.size + '</td>' +
+                '<td>' + f.time + '</td>' +
+                '<td>' +
+                    '<span class="btn-op" onclick="replaceFile(\'ep\',' + i + ')">更新文件</span>' +
+                    '<span class="btn-op" onclick="orderDlg(\'ep\',' + i + ')">调整顺序</span>' +
+                    '<span class="btn-op light" onclick="delEpFile(' + i + ')">删除</span>' +
+                '</td>' +
+            '</tr>';
+        });
+        if (!list.length) html = '<tr><td colspan="' + (isSrt ? 5 : 7) + '" style="padding:44px 0;color:#c8ccd4">暂无文件，可点击右上角「继续上传」</td></tr>';
+        tb.innerHTML = html;
+        document.getElementById('epCount').textContent = MAT.cheng.list.length;
+        document.getElementById('epStatus').textContent = epStatusText;
+    }
+    function delEpFile(i) {
+        dlg('删除确认', '⚠️', '确定删除该文件？', MAT[epTab].list[i].name,
+            '<div class="btn-lg plain" onclick="closeDlg()">取消</div>' +
+            '<div class="btn-lg primary" onclick="closeDlg();MAT[epTab].list.splice(' + i + ',1);renderEp()">确认删除</div>');
+    }
+    /* 发起提审：气泡确认 */
+    function submitReview(e) {
+        if (e) e.stopPropagation();
+        /* 成片、无字幕视频、字幕三类数量必须一致才能提审 */
+        var c = MAT.cheng.list.length, v = MAT.video.list.length, r = MAT.srt.list.length;
+        if (!(c && v && r) || c !== v || c !== r) {
+            dlg('物料数量不一致', '⚠️', '成片、无字幕视频、字幕的集数必须一致才能提审',
+                '当前：成片 ' + c + ' 集、无字幕视频 ' + v + ' 集、字幕 ' + r + ' 集',
+                '<div class="btn-lg plain" onclick="closeDlg()">去补齐</div>');
+            return;
+        }
+        document.getElementById('pcReview').classList.remove('hidden');
+    }
+    function hidePc() {
+        document.getElementById('pcReview').classList.add('hidden');
+    }
+    function doReview() {
+        epStatusText = '待审核';
+        if (curDraft) curDraft.status = '待审核';        /* 新建的短剧 */
+        if (curLegacy) curLegacy.status = '待审核';      /* 存量剧 */
+        hidePc();
+        closeEpisodes();                                /* 回到短剧管理页 */
+    }
+    /* 继续上传：本次只展示本次上传的文件，确认后再合并进该剧的累计物料 */
+    var upHolder = null, upConfirmed = false;
+    function openUpload() {
+        cpMode = 'edit';
+        upHolder = curDraft || curLegacy || null;
+        upConfirmed = false;
+        /* 换成空的会话缓冲，不显示历史记录 */
+        MAT.cheng.list = []; MAT.video.list = []; MAT.srt.list = []; MAT.audio.list = [];
+        document.getElementById('episodePage').classList.add('hidden');
+        hidePages();
+        document.getElementById('createPage').classList.remove('hidden');
+        document.getElementById('cpTitle').textContent = '修改';
+        document.getElementById('cpSteps').classList.add('hidden');
+        document.getElementById('cpStep1').classList.add('hidden');
+        document.getElementById('cpStep3').classList.add('hidden');
+        document.getElementById('cpStep2').classList.remove('hidden');
+        document.getElementById('cpActions').innerHTML = '<div class="btn-lg primary" onclick="upConfirm()">确认</div>';
+        curMat = epTab;
+        document.querySelectorAll('#cpStep2 .tc').forEach(function (t) { t.classList.toggle('on', t.dataset.mat === curMat); });
+        document.getElementById('matExt').textContent = MAT[curMat].ext;
+        renderMat();
+        window.scrollTo(0, 0);
+    }
+
+    /* 继续上传-确认：把本次上传的文件并入该剧累计物料，并提示已完成 */
+    function upConfirm() {
+        var keys = ['cheng', 'video', 'srt', 'audio'];
+        var total = 0;
+        keys.forEach(function (k) { total += MAT[k].list.length; });
+        if (!total) {
+            dlg('未上传文件', '⚠️', '本次没有上传任何文件', '请先选择要上传的物料',
+                '<div class="btn-lg plain" onclick="closeDlg()">继续上传</div>');
+            return;
+        }
+        var sh = shortSummary();
+        if (sh.length && !upConfirmed) {
+            dlg('存在时长不足 ' + SHORT_SEC + ' 秒的短集', '⚠️',
+                '以下剧集单集时长不足 ' + SHORT_SEC + ' 秒，确认仍要提交吗？', sh.join('；'),
+                '<div class="btn-lg plain" onclick="closeDlg()">返回修改</div>' +
+                '<div class="btn-lg primary" onclick="closeDlg();upConfirmed=true;upConfirm()">确认提交</div>');
+            return;
+        }
+        upConfirmed = false;
+        if (upHolder) {
+            keys.forEach(function (k) {
+                MAT[k].list.forEach(function (f) { upHolder.mats[k].push(f); });
+            });
+            bindMats(upHolder);      /* 重新指回累计列表 */
+        }
+        upHolder = null;
+        document.getElementById('cpStep2').classList.add('hidden');
+        document.getElementById('cpStep3').classList.remove('hidden');
+        document.getElementById('cpActions').innerHTML = '';
+        window.scrollTo(0, 0);
+    }
+
+    /* 通用弹窗 */
+    function dlg(title, icon, m1, m2, foot) {
+        document.getElementById('dlgTitle').textContent = title;
+        document.getElementById('dlgBody').innerHTML =
+            '<div class="big">' + icon + '</div><div class="m1">' + m1 + '</div>' + (m2 ? '<div class="m2">' + m2 + '</div>' : '');
+        document.getElementById('dlgFoot').innerHTML = foot || '<div class="btn-lg primary" onclick="closeDlg()">知道了</div>';
+        document.getElementById('mask').classList.remove('hidden');
+    }
+    /* 自定义内容弹窗（调整顺序等） */
+    function dlgHtml(title, bodyHtml, footHtml) {
+        document.getElementById('dlgTitle').textContent = title;
+        document.getElementById('dlgBody').innerHTML = bodyHtml;
+        document.getElementById('dlgFoot').innerHTML = footHtml || '<div class="btn-lg primary" onclick="closeDlg()">知道了</div>';
+        document.getElementById('mask').classList.remove('hidden');
+    }
+    function closeDlg() {
+        document.getElementById('mask').classList.add('hidden');
+    }
+</script>
+</body>
+</html>

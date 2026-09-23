@@ -1,0 +1,2311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>海外版权中台 — 短剧审核原型</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Roboto, Arial, sans-serif; font-size: 14px; color: #333; background: #f1f2f5; }
+    a { text-decoration: none; cursor: pointer; color: #22b998; }
+    input, select, button, textarea { font-family: inherit; }
+    .hidden { display: none !important; }
+    :root {
+        --teal: #22b998;
+        --teal-dark: #22b998;
+        --blue: #1e9fff;
+        --red: #ff5722;
+        --bar: #393d49;
+        --bar-hi: #2f323c;
+        --border: #e6e6e6;
+        --text-2: #666;
+        --text-3: #999;
+    }
+
+    /* ============ 框架 ============ */
+    .sbar { position: fixed; left: 0; top: 0; bottom: 0; width: 176px; background: #28303a; z-index: 40; overflow-y: auto; }
+    .logo { display: flex; flex-direction: column; align-items: center; padding: 14px 0 12px; }
+    .logo .lg-mark { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg,#22c9ba,#0aa2f0); display: flex; align-items: center; justify-content: center; }
+    .logo .lg-mark svg { width: 18px; height: 18px; }
+    .logo .lg-name { color: #e6e6e6; font-size: 13px; margin-top: 10px; }
+    .logo .lg-role { color: #97a3b0; font-size: 12px; margin-top: 6px; cursor: pointer; }
+    .logo .lg-role i { font-style: normal; font-size: 10px; }
+    .side-item { display: flex; align-items: center; justify-content: space-between; height: 44px; padding: 0 16px 0 18px; color: #c6ced6; font-size: 13px; cursor: pointer; }
+    .side-item:hover { background: var(--bar); color: #fff; }
+    .side-item .si-l { display: flex; align-items: center; gap: 9px; }
+    .side-item svg { width: 15px; height: 15px; opacity: .8; }
+    .side-item .arrow { font-size: 10px; color: #7d8794; }
+    .side-sub { background: #1f242d; }
+    .side-sub .side-item { padding-left: 34px; height: 40px; }
+    .side-sub .side-item.sub2 { padding-left: 56px; }
+    .side-item.open { background: var(--bar); color: #fff; }
+    .side-item.active { color: #fff; }
+
+    .topbar { position: fixed; left: 176px; right: 0; top: 0; height: 50px; background: #fff; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 16px; z-index: 30; }
+    .topbar .tb-ico { margin-right: 18px; color: #5a5f66; cursor: pointer; }
+    .topbar .tb-ico:hover { color: var(--teal); }
+    .tb-tab { height: 28px; display: flex; align-items: center; gap: 6px; padding: 0 12px; border: 1px solid transparent; border-radius: 2px; font-size: 13px; color: var(--text-2); cursor: pointer; margin-right: 8px; }
+    .tb-tab .x { color: #b6b6b6; font-size: 12px; }
+    .tb-tab:hover { color: var(--teal); }
+    .tb-tab.on { border-color: #e6e6e6; color: var(--teal); background: #eef8f7; }
+    .top-right { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 13px; color: var(--text-2); }
+    .top-right .tr { cursor: pointer; display: flex; align-items: center; gap: 5px; }
+    .top-right .tr:hover { color: var(--teal); }
+    .top-right svg { width: 15px; height: 15px; }
+
+    .main { margin: 50px 0 0 176px; padding: 0 16px 40px; min-height: calc(100vh - 50px); }
+
+    /* ============ 状态页签 ============ */
+    .stage-tabs { display: flex; align-items: flex-end; border-bottom: 1px solid var(--border); background: #fff; padding: 0 4px; margin: 0 -16px; }
+    .stage { padding: 13px 26px; font-size: 14px; color: var(--text-2); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+    .stage:hover { color: var(--teal); }
+    .stage.on { background: var(--teal); color: #fff; border-radius: 2px 2px 0 0; }
+
+    /* ============ 筛选区 ============ */
+    .filter { background: #fff; padding: 16px 20px 6px; border-bottom: 1px solid #f0f0f0; margin: 0 -16px; }
+    .f-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+    .fl { font-size: 13px; color: var(--text-2); white-space: nowrap; }
+    .fipt { width: 168px; height: 32px; border: 1px solid var(--border); border-radius: 2px; padding: 0 10px; font-size: 13px; outline: none; color: var(--text); }
+    .fipt:focus { border-color: var(--teal); }
+    .fsel { width: 168px; height: 32px; border: 1px solid var(--border); border-radius: 2px; padding: 0 8px; font-size: 13px; outline: none; color: var(--text-2); background: #fff; cursor: pointer; }
+    .fsel:focus { border-color: var(--teal); }
+    .funit { font-size: 13px; color: var(--text-2); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 32px; padding: 0 14px; border-radius: 2px; font-size: 13px; cursor: pointer; border: none; color: #fff; }
+    .btn svg { width: 13px; height: 13px; }
+    .btn.teal { background: var(--teal); } .btn.teal:hover { background: var(--teal-dark); }
+    .btn.blue { background: var(--blue); } .btn.blue:hover { background: #1288e8; }
+    .btn.green-bd { background: #fff; color: #07bd0c; border: 1px solid #bfe6bf; }
+    .btn.green-bd:hover { background: #f2fbf2; }
+    .btn.sm { height: 28px; padding: 0 10px; font-size: 12px; }
+    .op-line { display: flex; align-items: center; gap: 10px; padding: 14px 20px; background: #fff; margin: 0 -16px 12px; font-size: 13px; color: var(--text-2); }
+
+    .filter .f-actions { margin-left: auto; visibility: hidden; }
+    .table-card { background: #fff; padding: 12px 16px 18px; position: relative; }
+    .table-card { background: #fff; padding: 12px 16px 18px; position: relative; }
+    .col-set { position: absolute; right: 16px; top: 12px; width: 32px; height: 28px; border: 1px solid var(--border); border-radius: 2px; background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 5; }
+    .col-set svg { width: 15px; height: 15px; color: var(--text-2); }
+    .col-menu { position: absolute; right: 16px; top: 42px; width: 132px; background: #fff; border: 1px solid var(--border); border-radius: 2px; box-shadow: 0 4px 16px rgba(0,0,0,.12); z-index: 6; padding: 8px 0; max-height: 300px; overflow: auto; }
+    .col-menu label { display: flex; align-items: center; gap: 8px; padding: 5px 14px; font-size: 12px; color: var(--text-2); cursor: pointer; }
+    .col-menu label:hover { background: #f7f7f7; color: var(--teal); }
+    .col-menu input { accent-color: var(--teal); }
+
+    .data-table { width: 100%; border-collapse: collapse; margin-top: 42px; }
+    .data-table th, .data-table td { border: 1px solid #e5e9ec; padding: 10px 8px; font-size: 13px; text-align: center; color: var(--text-2); }
+    .data-table th { background: #f2f2f2; color: #333; font-weight: 600; height: 44px; }
+    .data-table tbody tr:hover td { background: #f6fbfa; }
+    .pager-line { margin-top: 14px; font-size: 13px; color: var(--text-2); }
+    .cbx { width: 14px; height: 14px; accent-color: var(--teal); cursor: pointer; }
+    /* 可排序表头 */
+    .data-table th.th-sort { cursor: pointer; user-select: none; }
+    .data-table th.th-sort:hover { color: var(--teal); }
+    .th-sort .sa { font-style: normal; font-size: 10px; margin-left: 5px; color: #b9b9b9; }
+    .th-sort .sa.on { color: var(--teal); }
+    /* 备注列：输入框 + 保存 */
+    /* 备注：单元格直接显示内容（最多 3 行，超出省略），点击弹窗编辑 */
+    .note-td { position: relative; }
+    .note-view { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: 13px; color: #333; line-height: 1.5; text-align: left; white-space: pre-wrap; word-break: break-word; cursor: pointer; border: 1px solid transparent; border-radius: 2px; padding: 4px 18px 4px 6px; margin: -4px -6px; min-height: 22px; }
+    .note-view:hover { border-color: var(--teal); background: #f2fdfb; }
+    .note-view.empty { color: #bfbfbf; }
+    /* ✎ / 渐隐 / 按钮都浮在格子上，pointer-events:none 让点击穿透到 .note-view */
+    .note-edit, .note-fade, .note-more { position: absolute; pointer-events: none; }
+    .note-edit { right: 5px; top: 7px; font-size: 12px; line-height: 1.5; color: #cfcfcf; }
+    .note-td:hover .note-edit { color: var(--teal); }
+    /* 渐隐遮罩：盖住第 3 行下缘，让「还有内容」成为一个面而不是一个字符。
+       三档背景跟随所在底色（默认 / 行 hover / 格 hover），否则会露出色差 */
+    .note-fade { left: 1px; right: 1px; bottom: 1px; height: 22px; background: linear-gradient(to bottom, rgba(255,255,255,0), #fff 62%); }
+    .data-table tbody tr:hover .note-fade { background: linear-gradient(to bottom, rgba(246,251,250,0), #f6fbfa 62%); }
+    .note-td:hover .note-fade { background: linear-gradient(to bottom, rgba(242,253,251,0), #f2fdfb 62%); }
+    /* 实心胶囊按钮：填充色在密集表格里比文字链醒目得多 */
+    .note-more { right: 5px; bottom: 5px; background: var(--teal); color: #fff; font-size: 11px; line-height: 1; padding: 4px 7px; border-radius: 3px; }
+    /* 备注编辑弹窗：复用 panel 外壳，但收成小对话框 */
+    #panNote .panel { min-height: 0; max-width: 560px; margin: 14vh auto 60px; }
+    .note-dlg-body { padding: 22px 26px 28px; }
+    .note-dlg-sub { font-size: 13px; color: var(--text-3); margin-bottom: 12px; }
+    .note-ta { width: 100%; height: 132px; border: 1px solid #dcdcdc; border-radius: 3px; padding: 10px; font-size: 14px; color: #333; line-height: 1.6; font-family: inherit; outline: none; resize: vertical; }
+    .note-ta:focus { border-color: var(--teal); }
+    .note-count { text-align: right; font-size: 12px; color: var(--text-3); margin-top: 6px; }
+
+    /* ============ CP配置 ============ */
+    .sub-tabs { display: flex; gap: 6px; }
+    .sub-tab { padding: 8px 20px; font-size: 14px; color: var(--text-2); cursor: pointer; border-radius: 2px; }
+    .sub-tab:hover { color: var(--teal); }
+    .sub-tab.on { background: var(--teal); color: #fff; }
+    .fbox { display: inline-flex; align-items: stretch; border: 1px solid var(--border); border-radius: 2px; height: 34px; overflow: hidden; }
+    .fbox-l { display: flex; align-items: center; padding: 0 12px; background: #fff; border-right: 1px solid var(--border); font-size: 13px; color: var(--text-2); white-space: nowrap; }
+    .fbox-i { width: 190px; border: none; outline: none; padding: 0 10px; font-size: 13px; color: #333; }
+    .fbox-i::placeholder { color: #c0c0c0; }
+    /* 账号管理：顶部统计卡 */
+    .stat-row { display: flex; gap: 14px; flex-wrap: wrap; padding: 16px 0 6px; }
+    .stat-card { flex: 1; min-width: 176px; background: #fff; border: 1px solid var(--border); border-left: 3px solid var(--teal); border-radius: 3px; padding: 12px 16px 14px; }
+    .stat-card .sc-l { display: inline-block; background: #f2f3f5; color: var(--text-2); font-size: 12px; padding: 3px 9px; border-radius: 3px; }
+    .stat-card .sc-n { margin-top: 10px; font-size: 22px; font-weight: 700; color: #333; }
+    /* 账号管理：操作列按钮组，强制单行不换行 */
+    .acct-table .cp-ops { display: flex; flex-wrap: nowrap; gap: 6px; justify-content: center; }
+    .acct-table .cp-ops .btn { height: 26px; padding: 0 9px; font-size: 12px; border-radius: 3px; white-space: nowrap; flex-shrink: 0; }
+    .btn.amber { background: #f0a03c; } .btn.amber:hover { background: #e2912b; }
+    .btn.gray { background: #b6bdc4; } .btn.gray:hover { background: #a6aeb6; }
+    .cp-tools { position: absolute; right: 16px; top: 12px; display: flex; gap: 8px; z-index: 5; }
+    .cp-tool { height: 30px; min-width: 34px; padding: 0 8px; border: 1px solid var(--border); border-radius: 3px; background: #fff; display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; color: var(--text-2); }
+    .cp-tool:hover { border-color: var(--teal); color: var(--teal); }
+    .cp-tool svg { width: 16px; height: 16px; }
+    .cp-tool i { font-style: normal; font-size: 10px; }
+    .cp-table { margin-top: 46px; }
+    .cp-table td, .cp-table th { padding: 10px 6px; }
+    .cp-table .cp-ops { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+    .cp-table .cp-ops .btn { height: 26px; padding: 0 9px; font-size: 12px; border-radius: 3px; }
+    .btn.rose { background: #f56f8f; } .btn.rose:hover { background: #ee5c7f; }
+
+    /* 添加 / 修改 cp配置 表单 */
+    .cf-bd { padding: 26px 40px 30px; }
+    .cf-row { display: flex; align-items: center; margin-bottom: 14px; }
+    .cf-l { width: 240px; flex-shrink: 0; text-align: right; padding-right: 18px; font-size: 14px; font-weight: 700; color: #4a4a4a; }
+    .cf-l .req { color: var(--red); font-weight: 400; margin-right: 3px; }
+    .cf-i { flex: 1; min-width: 0; height: 40px; border: 1px solid #e2e2e2; border-radius: 3px; padding: 0 12px; font-size: 14px; color: #333; outline: none; background: #fff; }
+    .cf-i::placeholder { color: #c4c4c4; }
+    .cf-i:focus { border-color: var(--teal); }
+    .cf-v { flex: 1; display: flex; align-items: center; flex-wrap: wrap; }
+    .cf-v .rd { margin-right: 22px; }
+    .cf-v .rd input { accent-color: #1e6bff; }
+    .ck { display: inline-flex; align-items: center; gap: 6px; margin-right: 26px; cursor: pointer; color: #333; }
+    .ck input { width: 14px; height: 14px; margin: 0; accent-color: var(--teal); }
+
+    /* 合作方名称：可搜索下拉 */
+    .cf-pick { flex: 1; min-width: 0; position: relative; display: flex; }
+    .cf-pick .cf-i { padding-right: 34px; }
+    .cf-caret { position: absolute; right: 12px; top: 0; height: 40px; display: flex; align-items: center; font-style: normal; font-size: 12px; color: #a8a8a8; cursor: pointer; }
+    .cf-drop { position: absolute; left: 0; right: 0; top: 44px; max-height: 250px; overflow-y: auto; background: #fff; border: 1px solid #e2e2e2; border-radius: 3px; box-shadow: 0 6px 20px rgba(0,0,0,.12); z-index: 20; padding: 4px 0; }
+    .cf-opt { padding: 9px 14px; font-size: 14px; color: #333; cursor: pointer; }
+    .cf-opt:hover { background: #f2fbfa; color: var(--teal); }
+    .cf-opt.on { background: #eef8f7; color: var(--teal); }
+    .cf-opt em { font-style: normal; color: var(--red); }
+    .cf-empty { padding: 14px; font-size: 13px; color: #aaa; text-align: center; }
+
+    /* ============ 详情面板 ============ */
+    .panel-mask { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 100; overflow-y: auto; }
+    .panel { position: relative; background: #fff; margin: 24px auto 60px; width: 96%; max-width: 1780px; min-height: 90vh; border-radius: 2px; box-shadow: 0 10px 40px rgba(0,0,0,.25); animation: pup .18s ease; }
+    @keyframes pup { from { transform: translateY(14px); opacity: .5; } to { transform: none; opacity: 1; } }
+    .panel-hd { display: flex; align-items: center; height: 52px; padding: 0 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: #fff; z-index: 10; }
+    .panel-title { font-size: 15px; font-weight: 700; color: #253044; border-left: 3px solid #22c9ba; padding-left: 10px; }
+    /* 加急标记：短剧名称后的红色实心圆，白字 */
+    .urgent-tag { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; background: #e8382f; color: #fff; font-size: 12px; font-weight: 700; line-height: 1.05; letter-spacing: -.5px; flex-shrink: 0; vertical-align: middle; }
+    .nm-cell { display: inline-flex; align-items: center; gap: 8px; justify-content: center; }
+    /* 认领状态：作为「详情」按钮下方的次级说明，故独占一行 */
+    .claimed-by { display: block; margin-top: 6px; font-size: 13px; color: #8a8f96; }
+    .unclaimed { color: #b6bcc4; }
+    /* 同步状态标识 */
+    .sy-tag { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 12px; line-height: 18px; }
+    .sy-tag.sy-done { background: #e8f6f4; color: #12897c; }
+    .sy-tag.sy-ing { background: #fff4e0; color: #d78100; }
+    .sy-tag.sy-none { background: #f2f3f5; color: #8a8f96; }
+    .panel-hd .hd-r { margin-left: auto; display: flex; gap: 14px; }
+    .panel-hd .hd-r span { font-size: 14px; color: var(--text-3); cursor: pointer; }
+    .panel-hd .hd-r span:hover { color: var(--teal); }
+
+    .panel-bar { display: flex; align-items: center; padding: 12px 20px; border-bottom: 1px solid #f0f0f0; }
+    .p-tabs { display: flex; gap: 2px; }
+    .p-tab { padding: 8px 16px; font-size: 13px; color: var(--text-2); cursor: pointer; border-radius: 2px; }
+    .p-tab:hover { color: var(--teal); }
+    .p-tab.on { background: var(--teal); color: #fff; font-weight: 600; }
+    .panel-bar .br { margin-left: auto; display: flex; align-items: center; gap: 20px; font-size: 14px; color: var(--text-2); }
+    .panel-bar .br b { font-weight: 600; }
+    /* 剧集信息的四个 mini 页签单独占一行，在主页签行下方 */
+    .panel-bar.mini-bar { padding: 10px 20px 10px 34px; }
+    .mini-tabs { display: flex; gap: 2px; }
+    .mini-tab { padding: 6px 14px; font-size: 13px; color: var(--text-2); cursor: pointer; border-radius: 2px; }
+    .mini-tab.on { background: var(--teal); color: #fff; }
+    .mini-tab:hover:not(.on) { color: var(--teal); }
+
+    .panel-bd { padding: 18px 22px 40px; }
+    /* 操作记录 / 短剧评级：叠在详情页之上的第二层弹窗 */
+    #panLog, #panBiz.stacked, #panOp.stacked { z-index: 120; }
+    #panLog .panel { margin-top: 12px; }
+    #panBiz.stacked .panel, #panOp.stacked .panel { margin-top: 12px; }
+    .log-bd { padding: 18px 22px 26px; position: relative; }
+    .log-set { position: absolute; right: 22px; top: 18px; height: 34px; padding: 0 10px; border: 1px solid var(--border); border-radius: 3px; background: #fff; display: flex; align-items: center; gap: 5px; cursor: pointer; color: var(--text-2); }
+    .log-set:hover { border-color: var(--teal); color: var(--teal); }
+    .log-set svg { width: 16px; height: 16px; }
+    .log-set i { font-style: normal; font-size: 10px; }
+    .log-table { margin-top: 52px; }
+    .log-table td.dt { text-align: left; }
+    .log-pager { border: 1px solid #e5e9ec; border-top: 0; padding: 11px 12px; font-size: 13px; color: var(--text-2); }
+    .sec-title { font-size: 20px; color: #333; margin: 6px 0 18px; }
+    .sec-title.mt { margin-top: 30px; padding-top: 22px; border-top: 1px solid #f0f0f0; }
+
+    .info-sec { display: flex; gap: 24px; }
+    .cover-col { flex-shrink: 0; }
+    .cover-box { width: 345px; height: 490px; border-radius: 6px; overflow: hidden; flex-shrink: 0; }
+    /* 最多 3 张封面：大图 + 下方小图切换 */
+    .cover-thumbs { display: flex; gap: 10px; margin-top: 12px; }
+    .cover-thumb { width: 74px; height: 105px; border-radius: 4px; overflow: hidden; cursor: pointer; border: 2px solid transparent; position: relative; background: #f2f2f2; }
+    .cover-thumb svg { width: 100%; height: 100%; display: block; }
+    .cover-thumb:hover { border-color: #9adbd4; }
+    .cover-thumb.on { border-color: var(--teal); }
+    .cover-thumb i { position: absolute; right: 0; bottom: 0; font-style: normal; font-size: 11px; line-height: 15px; padding: 0 5px; background: rgba(0,0,0,.55); color: #fff; border-radius: 3px 0 0 0; }
+    .cover-count { margin-top: 8px; font-size: 12px; color: var(--text-3); }
+    /* 文件是否已上传 */
+    .no-file { color: #b6bcc4; }
+    .has-file { color: #333; }
+    .cover-box svg { width: 100%; height: 100%; display: block; }
+    .info-grid { flex: 1; }
+    .ig-row { display: flex; margin-bottom: 17px; min-height: 20px; }
+    .ig-l { width: 130px; flex-shrink: 0; font-size: 14px; color: var(--text-2); }
+    .ig-v { font-size: 14px; color: #333; word-break: break-all; }
+    .ig-flex { display: flex; gap: 70px; align-items: baseline; }
+    .ig-flex .ig-l { width: auto; }
+    .ig-flex .ig-v { min-width: 60px; }
+    .edit-bd { margin-left: 12px; font-size: 13px; background: var(--teal); color: #fff; border-radius: 3px; padding: 3px 9px; cursor: pointer; white-space: nowrap; }
+    .edit-bd:hover { background: var(--teal-dark); }
+    .desc-col { max-width: 980px; line-height: 1.8; }
+
+    /* 角色表 */
+    .role-table { width: 100%; max-width: 1080px; margin: 0 auto; border-collapse: collapse; }
+    .role-table th, .role-table td { border: 1px solid #7dc9c2; padding: 16px 12px; font-size: 13px; color: var(--text-2); text-align: center; }
+    .role-table th { background: #f7fbfa; color: #333; font-weight: 600; }
+    .role-photo { width: 86px; height: 86px; border-radius: 2px; display: block; margin: 0 auto; object-fit: cover; background: linear-gradient(135deg,#e3e8f0,#cfd8e4); }
+    .role-photo.face { background: radial-gradient(circle at 50% 42%, #f7d4c0 30%, #3b4560 31%, #202a44 100%); }
+
+    /* 剧集信息 */
+    .player-row { display: flex; gap: 46px; }
+    .player-box { position: relative; width: 514px; height: 560px; border-radius: 4px; overflow: hidden; flex-shrink: 0; background: #f4e9dc; }
+    .player-box svg { width: 100%; height: 100%; display: block; }
+    .player-box .pp-overlay { position: absolute; inset: 0; background: rgba(0,0,0,.15); display: flex; flex-direction: column; justify-content: flex-end; opacity: 0; transition: opacity .15s; cursor: pointer; }
+    .player-box:hover .pp-overlay { opacity: 1; }
+    .pp-bar { display: flex; align-items: center; gap: 14px; color: #fff; font-size: 13px; background: linear-gradient(transparent, rgba(0,0,0,.55)); padding: 14px 16px 10px; }
+    .pp-bar .prog { flex: 1; height: 4px; background: rgba(255,255,255,.35); border-radius: 2px; position: relative; }
+    .pp-bar .prog i { display: block; width: 12%; height: 100%; background: #fff; border-radius: 2px; }
+    .pp-big { position: absolute; left: 50%; top: 45%; transform: translate(-50%,-50%); width: 62px; height: 62px; border-radius: 50%; background: rgba(0,0,0,.38); display: flex; align-items: center; justify-content: center; }
+    .pp-big svg { width: 24px; height: 24px; margin-left: 3px; }
+    .player-side { padding-top: 4px; }
+    .side-h { display: flex; align-items: center; gap: 34px; }
+    .side-l { width: 60px; font-size: 19px; font-weight: 700; color: #333; }
+    .ep-chips { display: flex; flex-wrap: wrap; gap: 8px; max-width: 320px; }
+    .ep-chip { width: 44px; height: 60px; background: #fff; border: 1px solid var(--border); border-radius: 2px; text-align: center; cursor: pointer; overflow: hidden; }
+    .ep-chip b { display: block; font-size: 19px; color: #333; padding-top: 8px; }
+    .ep-chip i { display: block; font-style: normal; font-size: 12px; color: var(--text-3); margin-top: 4px; }
+    .ep-chip.on { border-color: #25c9b8; position: relative; }
+    .ep-chip.on::after { content: ''; position: absolute; inset: 0 0 auto; height: 3px; background: #25c9b8; }
+    /* 时长不足 25 秒：底色浅红 + 时长加粗红字 */
+    .ep-chip.warn { background: #fdeceb; border-color: #f3b4b0; }
+    .ep-chip.warn i { color: #e8382f; font-weight: 700; }
+    .ep-chip.warn b { color: #b02a24; }
+    .ep-warn { margin-bottom: 14px; padding: 9px 14px; background: #fdeceb; border: 1px solid #f6cdc9; border-radius: 3px; font-size: 13px; color: #c8362d; }
+    /* 字幕 / 音轨：文件列表 */
+    .file-wrap { padding: 10px 0 30px; }
+    .file-table { border-collapse: collapse; width: 100%; max-width: 1120px; }
+    .file-table th, .file-table td { border: 1px solid #eceff1; padding: 12px 16px; font-size: 14px; text-align: left; }
+    .file-table th { background: #f7f8fa; color: #333; font-weight: 700; }
+    .file-table td { color: var(--text-2); }
+    .file-table tbody tr:hover td { background: #fafcfc; }
+    .file-dl { color: var(--teal); cursor: pointer; }
+    .file-dl:hover { text-decoration: underline; }
+    .side-sel { margin-top: 18px; width: 92px; height: 32px; border: 1px solid var(--border); border-radius: 2px; font-size: 12px; color: var(--text-2); padding: 0 6px; background: #fff; cursor: pointer; }
+
+    /* ============ 审核面板 ============ */
+    .av-sec { padding: 4px 0 22px; }
+    .av-sec + .av-sec { border-top: 1px dashed #e2e2e2; padding-top: 18px; }
+    .av-h3 { font-size: 17px; font-weight: 700; color: #4a4a4a; margin: 10px 0 20px; }
+    .av-grid { display: flex; flex-wrap: wrap; gap: 16px 0; }
+    .av-item { width: 50%; display: flex; align-items: baseline; font-size: 14px; padding-right: 24px; }
+    .av-item .al { width: 320px; max-width: 30%; flex-shrink: 0; color: #4a4a4a; font-weight: 700; }
+    .av-item .av { color: #666; }
+    .av-form { display: flex; flex-wrap: wrap; gap: 14px 0; }
+    .av-form .av-item { align-items: center; }
+    .av-form .av-item .al { font-weight: 400; color: #333; }
+    .av-item .req { color: var(--red); margin-left: 4px; }
+    .avi { flex: 1; min-width: 0; height: 36px; border: 1px solid #dcdcdc; border-radius: 3px; padding: 0 10px; font-size: 14px; color: #333; outline: none; background: #fff; }
+    .avi::placeholder { color: #b8b8b8; }
+    .avi:focus { border-color: var(--teal); }
+    .avi.readonly { background: #f2f2f2; border-color: transparent; color: #555; }
+    .result-line { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 8px; font-size: 14px; }
+    .result-line .rl { color: #4a4a4a; font-weight: 700; margin-right: 10px; }
+    .result-line .req { color: var(--red); }
+    .rd { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; margin-right: 14px; color: #333; }
+    .rd input { accent-color: #22b998; width: 14px; height: 14px; margin: 0; }
+    .back-note { display: flex; align-items: flex-start; justify-content: center; gap: 8px; margin-top: 18px; }
+    .back-note .bl { font-size: 14px; color: #4a4a4a; font-weight: 700; white-space: nowrap; padding-top: 8px; }
+    .back-note textarea { width: 660px; max-width: 88%; height: 96px; border: 1px solid #dcdcdc; border-radius: 3px; padding: 10px; font-size: 13px; outline: none; resize: vertical; }
+    .back-note textarea:focus { border-color: var(--teal); }
+    .submit-line { display: flex; justify-content: center; gap: 12px; margin-top: 26px; }
+    /* 标记-漫剧细分：整行灰底 + 4列复选 */
+    .mark-sub { display: flex; align-items: stretch; margin-top: 18px; border: 1px solid #eef0f2; border-radius: 3px; overflow: hidden; }
+    .ms-l { width: 120px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #f7f8fa; font-size: 14px; color: #4a4a4a; padding: 0 10px; text-align: center; }
+    .ms-grid { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 10px; padding: 16px 20px; }
+    .ms-grid .ck { margin-right: 0; }
+    .btn.submit { background: #19be9b; height: 36px; padding: 0 18px; border-radius: 3px; }
+    .btn.cancel { background: #f56f8f; height: 36px; padding: 0 18px; border-radius: 3px; }
+
+    /* ============ 同步原始书库 ============ */
+    .sync-body { padding: 26px 30px 50px; max-width: 1200px; margin: 0 auto; }
+    .sync-row { display: flex; align-items: center; margin-bottom: 26px; }
+    .sync-row .sl { width: 130px; text-align: right; padding-right: 20px; font-size: 14px; color: var(--text-2); font-weight: 700; flex-shrink: 0; }
+    .sync-row .sl .req { color: var(--red); margin-right: 3px; font-weight: 400; }
+    .sync-ipt { flex: 1; height: 36px; border: 1px solid transparent; background: #f2f2f2; border-radius: 2px; padding: 0 12px; font-size: 13px; color: #555; outline: none; }
+    .sync-hint { color: var(--text-3); font-size: 13px; margin: 0 10px; }
+    .btn.dl { background: #c2c2c2; height: 30px; font-size: 12px; }
+    .ro-label { font-weight: 400; color: var(--text-2); }
+
+    /* toast */
+    .toast { position: fixed; top: 30%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,.65); color: #fff; padding: 12px 26px; border-radius: 4px; font-size: 14px; z-index: 500; animation: pup .18s; }
+</style>
+</head>
+<body>
+
+<!-- ================= 左侧菜单 ================= -->
+<nav class="sbar">
+    <div class="logo">
+        <div class="lg-mark"><svg viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></div>
+        <div class="lg-name">超级管理员</div>
+        <div class="lg-role">管理员 <i>⌄</i></div>
+    </div>
+    <div class="side-item" onclick="coming('系统管理')">
+        <span class="si-l"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 8a4 4 0 100 8 4 4 0 000-8zm9 4l-2.2 1.6.3 2.6-2.6.9-1.2 2.4L12 18l-3.3 1.5-1.2-2.4-2.6-.9.3-2.6L3 12l2.2-1.6-.3-2.6 2.6-.9 1.2-2.4L12 6l3.3-1.5 1.2 2.4 2.6.9-.3 2.6z"/></svg>系统管理</span><span class="arrow">›</span>
+    </div>
+    <div class="side-item" onclick="coming('海外内容中台-116')">
+        <span class="si-l"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v4H4zM4 10h16v4H4zM4 16h10v4H4z"/></svg>海外内容中台-116</span><span class="arrow">›</span>
+    </div>
+    <div class="side-item open" onclick="toggleSub(this)">
+        <span class="si-l"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5h18v14H3zM5 7v10h14V7zM9 10l6 3.5-6 3.5z"/></svg>海外版权中台</span><span class="arrow">⌄</span>
+    </div>
+    <div class="side-sub">
+        <div class="side-item open" onclick="toggleSub(this)"><span class="si-l">基础配置</span><span class="arrow">⌄</span></div>
+        <div class="side-sub">
+            <div class="side-item sub2" id="navCp" onclick="goPage('cp')"><span class="si-l">CP配置</span></div>
+            <div class="side-item sub2" onclick="coming('合作方管理')"><span class="si-l">合作方管理</span></div>
+            <div class="side-item sub2" id="navAcct" onclick="goPage('acct')"><span class="si-l">版权合作平台-账号管理</span></div>
+        </div>
+        <div class="side-item open" onclick="toggleSub(this)"><span class="si-l">内容审核</span><span class="arrow">⌄</span></div>
+        <div class="side-sub">
+            <div class="side-item sub2 active" id="navAudit" onclick="goPage('audit')"><span class="si-l">短剧审核</span></div>
+            <div class="side-item sub2" onclick="coming('重复剧判定')"><span class="si-l">重复剧判定</span></div>
+        </div>
+        <div class="side-item" onclick="coming('合同管理')"><span class="si-l">合同管理</span><span class="arrow">›</span></div>
+        <div class="side-item" onclick="coming('版权管理')"><span class="si-l">版权管理</span><span class="arrow">›</span></div>
+    </div>
+    <div class="side-item" onclick="coming('结算中台-102机器')">
+        <span class="si-l"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16v3H4zM4 10h16v9H4zM6 12h5v5H6z"/></svg>结算中台-102机器</span><span class="arrow">›</span>
+    </div>
+    <div class="side-item" onclick="coming('原国内归档')">
+        <span class="si-l"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 4h14l2 4v11a2 2 0 01-2 2H5a2 2 0 01-2-2V8zM3 8h18M10 12h4"/></svg>原国内归档</span><span class="arrow">›</span>
+    </div>
+</nav>
+
+<!-- ================= 顶部栏 ================= -->
+<header class="topbar">
+    <span class="tb-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="#f0a03c"><path d="M3 4h5l2 2h11v13H3zM3 8h18"/></svg></span>
+    <span class="tb-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5l7 7-7 7M14 5l7 7-7 7" transform="rotate(180 12 12)"/></svg></span>
+    <div class="tb-tab">首页</div>
+    <div class="tb-tab">原始片库 <span class="x" onclick="coming('关闭标签')">⊗</span></div>
+    <div class="tb-tab on" id="tabAudit" onclick="goPage('audit')">短剧审核 <span class="x" onclick="coming('关闭标签')">⊗</span></div>
+    <div class="tb-tab hidden" id="tabCp" onclick="goPage('cp')">CP配置 <span class="x" onclick="coming('关闭标签')">⊗</span></div>
+    <div class="tb-tab hidden" id="tabAcct" onclick="goPage('acct')">版权合作平台-账号管理 <span class="x" onclick="coming('关闭标签')">⊗</span></div>
+    <div class="top-right">
+        <span class="tr" onclick="coming('播放')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l5 7-5 7zM15 5l5 7-5 7z"/></svg></span>
+        <span class="tr" onclick="coming('下载中心')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 18H5a4 4 0 01-.9-7.9A5.5 5.5 0 0114.7 6.2 4.6 4.6 0 0119 10a4 4 0 010 8zM12 10l-4 5h3v4h2v-4h3z"/></svg>下载中心</span>
+        <span class="tr" onclick="coming('技术反馈')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16v12H8l-4 4z"/></svg>技术反馈</span>
+        <span class="tr" onclick="coming('主题')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h6v6H4zM13 4h7v5h-7zM13 12h7v8h-7zM4 13h6v7H4z"/></svg>主题</span>
+        <span class="tr" onclick="coming('关闭操作')">关闭操作 ⌄</span>
+        <span class="tr" onclick="coming('退出')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 3h10v18H9v-2h8V5H9zM3 12h9M8 7L3 12l5 5"/></svg>退出</span>
+    </div>
+</header>
+
+<!-- ================= 主区域 ================= -->
+<main class="main" id="pageAudit">
+    <!-- 阶段页签 -->
+    <div class="stage-tabs" id="stageTabs"></div>
+
+    <!-- 筛选区 -->
+    <div class="filter">
+        <div class="f-row">
+            <span class="fl">ID</span><input class="fipt" id="q_id">
+            <span class="fl">短剧名称</span><input class="fipt" id="q_name">
+            <span class="fl" id="qL_book" style="display:none">原始书库ID</span><input class="fipt" id="q_book" style="display:none">
+            <span class="fl">商务对接人</span>
+            <select class="fsel" id="q_bizOwner"><option>-全部-</option></select>
+            <span class="fl">运营负责人</span>
+            <select class="fsel" id="q_claim"><option>-全部-</option><option>未认领</option><option>超级管理员（我）</option><option>李四</option><option>王五</option></select>
+            <span class="fl">是否首发</span>
+            <select class="fsel" id="q_first"><option>-全部-</option><option>首发</option><option>次新</option><option>二轮</option></select>
+            <span class="fl" id="qL_firstTime">是否首次提审</span>
+            <select class="fsel" id="q_firstTime"><option>-全部-</option><option>是</option><option>否</option></select>
+        </div>
+        <div class="f-row">
+            <span class="fl" id="qL_firstTime2">是否首次提审</span>
+            <select class="fsel" id="q_firstTime2"><option>-全部-</option><option>是</option><option>否</option></select>
+            <span class="fl">cp名称</span>
+            <select class="fsel" id="q_cp"><option>--请选择--</option><option>示例CP01</option><option>示例CP02</option><option>示例CP05</option><option>示例CP03</option><option>示例CP04</option></select>
+            <span class="fl">合作方名称</span><input class="fipt" id="q_partner">
+            <span class="fl" id="qL_sync" style="display:none">同步状态</span>
+            <select class="fsel" id="q_sync" style="display:none"><option>--请选择--</option><option>已同步</option><option>同步中</option><option>未同步</option></select>
+            <span class="fl">短剧类型</span>
+            <select class="fsel" id="q_type"><option>-全部-</option><option>真人短剧</option><option>动漫短剧</option></select>
+            <span class="fl" id="qL_urgent" style="display:none">是否加急</span>
+            <select class="fsel" id="q_urgent" style="display:none"><option>-全部-</option><option>加急</option><option>不加急</option></select>
+            <div class="f-actions" id="rowActions1" style="display:flex;gap:10px">
+                <div class="btn teal" onclick="tQuery()"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.5-4.5"/></svg>搜索</div>
+                <div class="btn" style="background:#22b998" onclick="tClear()">清空</div>
+            </div>
+        </div>
+        <div class="f-row" style="margin-bottom:12px" id="rowActions2">
+            <div class="btn teal" onclick="tQuery()"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.5-4.5"/></svg>搜索</div>
+            <div class="btn" style="background:#22b998" onclick="tClear()">清空</div>
+        </div>
+    </div>
+
+    <!-- 操作行 -->
+    <div class="op-line">操作：<div class="btn teal" onclick="toast('已添加到下载任务')"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 4v11M8 11l4 4 4-4M5 20h14"/></svg>导出</div></div>
+
+    <!-- 列表 -->
+    <div class="table-card">
+        <div class="col-set" onclick="event.stopPropagation();document.getElementById('colMenu').classList.toggle('hidden')">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5h4v4H3zM9 5h12v4H9zM3 10h4v4H3zM9 10h12v4H9zM3 15h4v4H3zM9 15h12v4H9z"/></svg>
+        </div>
+        <div class="col-menu hidden" id="colMenu" onclick="event.stopPropagation()"></div>
+        <div style="overflow-x:auto">
+            <table class="data-table" id="gridTable">
+                <thead><tr id="gridHead"></tr></thead>
+                <tbody id="gridBody"></tbody>
+            </table>
+        </div>
+        <div class="pager-line" id="pagerLine"></div>
+    </div>
+</main>
+
+<!-- ================= CP配置 ================= -->
+<main class="main hidden" id="pageCp">
+    <div class="stage-tabs">
+        <div class="stage on">cp对接</div>
+        <div class="stage" onclick="coming('cp接口')">cp接口</div>
+    </div>
+    <div class="filter">
+        <div class="f-row" style="margin-bottom:16px">
+            <div class="sub-tabs">
+                <div class="sub-tab on" onclick="cpSubTab(this,'短剧')">短剧</div>
+                <div class="sub-tab" onclick="cpSubTab(this,'剧本')">剧本</div>
+                <div class="sub-tab" onclick="cpSubTab(this,'改编')">改编</div>
+            </div>
+        </div>
+        <div class="f-row">
+            <span class="fbox"><span class="fbox-l">CPid</span><input class="fbox-i" id="cq_id" placeholder="CPid"></span>
+            <span class="fbox"><span class="fbox-l">CP名称</span><input class="fbox-i" id="cq_name" placeholder="CP名称"></span>
+            <span class="fl">引入类型</span>
+            <select class="fsel" id="cq_intro"><option>全部</option><option>引入</option><option>自制</option></select>
+            <span class="fl">产品线类型</span>
+            <select class="fsel" id="cq_line"><option>全部</option><option>海外</option><option>大陆</option><option>繁体</option></select>
+            <span class="fl">支持广告</span>
+            <select class="fsel" id="cq_ad"><option>全部</option><option>是</option><option>否</option></select>
+            <div class="f-actions" style="display:flex;gap:10px;visibility:visible">
+                <div class="btn teal" onclick="cpQuery()"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.5-4.5"/></svg>搜索</div>
+                <div class="btn teal" onclick="cpClear()"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.5-4.5"/></svg>清除搜索</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="op-line">操作：
+        <div class="btn teal" onclick="openCpForm()">＋ 添加</div>
+        <div class="btn teal" onclick="toast('已添加到下载任务')"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 4v11M8 11l4 4 4-4M5 20h14"/></svg>导出</div>
+        <div class="btn teal" onclick="coming('批量修改')">✎ 批量修改</div>
+    </div>
+
+    <div class="table-card">
+        <div class="cp-tools">
+            <div class="cp-tool" onclick="cpRender();toast('已刷新')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 11-2.3-5.7M20 4v4h-4"/></svg></div>
+            <div class="cp-tool" onclick="coming('列设置')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg><i>▼</i></div>
+        </div>
+        <div style="overflow-x:auto">
+            <table class="data-table cp-table">
+                <thead><tr>
+                    <th style="width:56px">序号</th><th style="width:70px">cpid</th><th style="width:96px">cp名称</th>
+                    <th style="width:120px">合作方名称</th><th style="width:96px">我方主体</th><th style="width:70px">cp类型</th>
+                    <th style="width:90px">引入类型</th><th style="width:100px">产品线类型</th><th style="width:80px">支持广告</th>
+                    <th style="width:56px">自有</th><th style="width:140px">创建时间</th><th style="width:140px">更新时间</th>
+                    <th style="width:90px">创建人</th><th style="width:190px">操作</th>
+                </tr></thead>
+                <tbody id="cpBody"></tbody>
+            </table>
+        </div>
+        <div class="pager-line" id="cpPager"></div>
+    </div>
+</main>
+
+<!-- ================= 版权合作平台-账号管理 ================= -->
+<main class="main hidden" id="pageAcct">
+    <div class="stat-row" id="acctStats"></div>
+    <div class="filter">
+        <div class="f-row">
+            <span class="fbox"><span class="fbox-l">账号ID</span><input class="fbox-i" id="aq_id"></span>
+            <span class="fbox"><span class="fbox-l">手机号</span><input class="fbox-i" id="aq_phone"></span>
+            <span class="fbox"><span class="fbox-l">合作方名称</span><input class="fbox-i" id="aq_partner"></span>
+            <span class="fbox"><span class="fbox-l">关联CPid</span><input class="fbox-i" id="aq_cpid"></span>
+            <span class="fl">账号类型</span>
+            <select class="fsel" id="aq_kind"><option>全部</option><option>企业</option><option>个人</option></select>
+            <span class="fl">认证状态</span>
+            <select class="fsel" id="aq_auth"><option>全部</option><option>认证通过</option><option>待认证</option><option>认证失败</option></select>
+        </div>
+        <div class="f-row" style="margin-bottom:12px">
+            <div class="btn teal" onclick="acctQuery()"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.5-4.5"/></svg>搜索</div>
+            <div class="btn" style="background:#22b998" onclick="acctClear()">清空搜索</div>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <div class="cp-tools">
+            <div class="cp-tool" onclick="acctRender();toast('已刷新')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 11-2.3-5.7M20 4v4h-4"/></svg></div>
+            <div class="cp-tool" onclick="coming('列设置')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg><i>▼</i></div>
+        </div>
+        <div style="overflow-x:auto">
+            <table class="data-table acct-table">
+                <thead><tr>
+                    <th style="width:40px"><input type="checkbox" class="cbx" onclick="acctCkAll(this)"></th>
+                    <th style="width:100px">手机号</th><th style="width:116px">账号ID</th>
+                    <th style="width:180px">合作方名称</th><th style="width:170px">关联CPid</th>
+                    <th style="width:70px">账号类型</th><th style="width:72px">认证状态</th>
+                    <th style="width:140px">注册时间</th><th style="width:92px">商务对接人</th>
+                    <th style="width:430px">操作</th>
+                </tr></thead>
+                <tbody id="acctBody"></tbody>
+            </table>
+        </div>
+        <div class="pager-line" id="acctPager"></div>
+    </div>
+</main>
+
+<!-- ================= 短剧审核详情：短剧信息 ================= -->
+<div class="panel-mask hidden" id="panInfo" onclick="closePans()">
+    <div class="panel" onclick="event.stopPropagation()">
+        <div class="panel-hd">
+            <span class="panel-title">短剧审核详情</span>
+            <div class="hd-r"><span onclick="coming('窗口最小化')">—</span><span onclick="coming('窗口最大化')">▢</span><span onclick="closePans()">✕</span></div>
+        </div>
+        <div class="panel-bar">
+            <div class="p-tabs">
+                <div class="p-tab on">短剧信息</div>
+                <div class="p-tab" onclick="openEpi()">剧集信息</div>
+            </div>
+            <div class="br">
+                <span>状态: <b id="piStatus"></b></span>
+                <span id="piOps">操作:</span>
+                <div class="btn teal sm" id="piRatingBtn" onclick="openRating()">✎ 短剧评级</div>
+                <div class="btn teal sm" onclick="openLog()">▤ 操作记录</div>
+            </div>
+        </div>
+        <div class="panel-bd">
+            <div class="sec-title">基本信息</div>
+            <div class="info-sec">
+                <div class="cover-col">
+                    <div class="cover-box" id="piCover"></div>
+                    <div class="cover-thumbs" id="piThumbs"></div>
+                </div>
+                <div class="info-grid" id="piInfo"></div>
+            </div>
+            <div class="sec-title mt">版权信息</div>
+            <div class="info-grid" id="piRight" style="max-width:1480px"></div>
+            <div class="sec-title mt">制作团队</div>
+            <div class="info-grid" id="piTeam" style="max-width:1480px"></div>
+            <div class="sec-title mt">角色信息</div>
+            <table class="role-table">
+                <thead><tr><th style="width:13%">角色类型</th><th style="width:14%">角色名</th><th>真实姓名(简体)</th><th>真实姓名(繁体)</th><th>真实姓名(英文)</th><th>简介</th><th style="width:12%">照片</th></tr></thead>
+                <tbody id="piRoles"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ================= 剧集信息 ================= -->
+<div class="panel-mask hidden" id="panEpi" onclick="closePans()">
+    <div class="panel" onclick="event.stopPropagation()">
+        <div class="panel-hd">
+            <span class="panel-title">短剧审核详情</span>
+            <div class="hd-r"><span onclick="coming('窗口最小化')">—</span><span onclick="coming('窗口最大化')">▢</span><span onclick="closePans()">✕</span></div>
+        </div>
+        <div class="panel-bar">
+            <div class="p-tabs">
+                <div class="p-tab" onclick="openInfo()">短剧信息</div>
+                <div class="p-tab on">剧集信息</div>
+            </div>
+            <div class="br">
+                <span>状态: <b id="peStatus"></b></span>
+                <span id="peOps">操作:</span>
+                <div class="btn teal sm" id="peRatingBtn" onclick="openRating()">✎ 短剧评级</div>
+                <div class="btn teal sm" onclick="openLog()">▤ 操作记录</div>
+            </div>
+        </div>
+        <div class="panel-bar mini-bar">
+            <div class="mini-tabs">
+                <div class="mini-tab" data-m="cheng" onclick="switchMini(this)">成片</div>
+                <div class="mini-tab" data-m="video" onclick="switchMini(this)">无字幕视频</div>
+                <div class="mini-tab" data-m="srt" onclick="switchMini(this)">字幕srt</div>
+                <div class="mini-tab" data-m="audio" onclick="switchMini(this)">音轨</div>
+                <div class="btn teal sm hidden" id="srtExport" style="margin-left:14px" onclick="exportSrt()">⬇ 字幕导出</div>
+            </div>
+        </div>
+        <div class="panel-bd">
+            <div class="ep-warn hidden" id="epWarn"></div>
+            <div class="player-row" id="epPlayer">
+                <div class="player-box" id="playerBox">
+                    <div id="playerArt"></div>
+                    <div class="pp-overlay" onclick="toast('播放（演示）')">
+                        <div class="pp-big"><svg viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></div>
+                        <div class="pp-bar"><span>▶</span><span id="ppTime">00:00 / 01:40</span><div class="prog"><i></i></div><span>⛶</span></div>
+                    </div>
+                </div>
+                <div class="player-side">
+                    <div class="side-h"><div class="side-l">选集</div><div class="ep-chips" id="epChips"></div></div>
+                    <div class="side-h" style="margin-top:26px"><div class="side-l">速度</div></div>
+                    <select class="side-sel" onclick="toast('倍速：' + this.value)"><option>正常</option><option>1.5x</option><option>2.0x</option></select>
+                    <div class="side-h" style="margin-top:22px"><div class="side-l">全屏</div></div>
+                    <select class="side-sel" onclick="toast('全屏：' + this.value)"><option>普通</option><option>拉伸</option><option>铺满</option></select>
+                </div>
+            </div>
+            <!-- 字幕srt / 音轨：以文件列表形式展示 -->
+            <div class="file-wrap hidden" id="epFiles">
+                <table class="file-table">
+                    <thead><tr><th style="width:110px">集数</th><th id="efCol">字幕文件</th></tr></thead>
+                    <tbody id="efBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= 商务审核 ================= -->
+<div class="panel-mask hidden" id="panBiz" onclick="closeBiz()">
+    <div class="panel" onclick="event.stopPropagation()" style="min-height:0">
+        <div class="panel-hd">
+            <span class="panel-title">商务审核</span>
+            <div class="hd-r"><span onclick="coming('窗口最小化')">—</span><span onclick="coming('窗口最大化')">▢</span><span onclick="closeBiz()">✕</span></div>
+        </div>
+        <div class="panel-bd">
+            <div class="av-sec">
+                <div class="av-h3">供应商提交信息</div>
+                <div class="av-grid">
+                    <div class="av-item"><span class="al">短剧名称:</span><span class="av" id="abName"></span></div>
+                    <div class="av-item"><span class="al">合作方:</span><span class="av" id="abPartner"></span></div>
+                    <div class="av-item"><span class="al">CP名称:</span><span class="av" id="abCp1"></span></div>
+                    <div class="av-item"><span class="al">总集数:</span><span class="av" id="abEps"></span></div>
+                </div>
+            </div>
+
+            <div class="av-sec hidden" id="bizExtra">
+                <div class="av-h3">商务补充信息</div>
+                <div class="av-form av-grid">
+                    <div class="av-item"><span class="al">评级<span class="req">*</span></span>
+                        <select class="avi" id="b_rating"><option>--请选择--</option><option>S</option><option>A</option><option>B</option><option>C</option><option>D</option></select>
+                    </div>
+                    <div class="av-item"><span class="al">保底金<span class="req">*</span></span>
+                        <input class="avi" id="b_guarantee" placeholder="请输入保底金额">
+                    </div>
+                    <div class="av-item"><span class="al">CP名称<span class="req">*</span></span>
+                        <select class="avi" id="b_cp"><option>--请选择--</option><option>示例CP01</option><option>示例CP02</option><option>示例CP03</option><option>示例CP04</option></select>
+                    </div>
+                    <div class="av-item"><span class="al">是否加急审批<span class="req">*</span></span>
+                        <span class="cf-v">
+                            <label class="rd"><input type="radio" name="b_urgent" value="不加急" checked>不加急</label>
+                            <label class="rd"><input type="radio" name="b_urgent" value="加急">加急</label>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="av-sec">
+                <div class="result-line">
+                    <span class="rl">审核结果<span class="req">*</span></span>
+                    <label class="rd"><input type="radio" name="b_res" value="pass">商务通过</label>
+                    <label class="rd"><input type="radio" name="b_res" value="back">需修改</label>
+                    <label class="rd"><input type="radio" name="b_res" value="fail">不通过</label>
+                </div>
+                <div class="back-note hidden" id="b_note">
+                    <span class="bl">退回备注<span style="color:var(--red)">*</span></span>
+                    <textarea placeholder="请填写退回/不通过原因"></textarea>
+                </div>
+                <div class="submit-line">
+                    <div class="btn submit" onclick="doBiz()">✔ 提交</div>
+                    <div class="btn cancel" onclick="closeBiz()">⚡ 取消</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= 运营审核 ================= -->
+<div class="panel-mask hidden" id="panOp" onclick="closeOp()">
+    <div class="panel" onclick="event.stopPropagation()" style="min-height:0">
+        <div class="panel-hd">
+            <span class="panel-title">运营审核</span>
+            <div class="hd-r"><span onclick="coming('窗口最小化')">—</span><span onclick="coming('窗口最大化')">▢</span><span onclick="closeOp()">✕</span></div>
+        </div>
+        <div class="panel-bd">
+            <div class="av-sec">
+                <div class="av-h3">供应商提交信息</div>
+                <div class="av-grid">
+                    <div class="av-item"><span class="al">短剧名称:</span><span class="av" id="opName"></span></div>
+                    <div class="av-item"><span class="al">合作方:</span><span class="av" id="opPartner"></span></div>
+                    <div class="av-item"><span class="al">CP名称:</span><span class="av" id="opCp1"></span></div>
+                    <div class="av-item"><span class="al">总集数:</span><span class="av" id="opEps"></span></div>
+                    <div class="av-item"><span class="al">漫剧细分类型:</span><span class="av" id="opSub"></span></div>
+                </div>
+            </div>
+
+            <div class="av-sec">
+                <div class="av-h3">商务补充信息（只读）</div>
+                <div class="av-grid">
+                    <div class="av-item"><span class="al">评级:</span><span class="av" id="opRating"></span></div>
+                    <div class="av-item"><span class="al">保底金:</span><span class="av" id="opGuarantee"></span></div>
+                    <div class="av-item"><span class="al">CP名称:</span><span class="av" id="opCp2"></span></div>
+                </div>
+            </div>
+
+            <div class="av-sec hidden" id="opExtra">
+                <div class="av-h3">运营补充信息</div>
+                <div class="av-form av-grid">
+                    <div class="av-item"><span class="al">业务归属<span class="req">*</span></span>
+                        <select class="avi" id="o_biz"><option>--请选择--</option><option>DB团队</option><option>RL团队</option><option>社媒团队</option><option>产研团队</option></select>
+                    </div>
+                    <div class="av-item"><span class="al">原版短剧ID</span>
+                        <input class="avi" placeholder="非必填">
+                    </div>
+                    <div class="av-item"><span class="al">原始价格<span class="req">*</span></span>
+                        <input class="avi" id="o_price" value="0.5">
+                    </div>
+                    <div class="av-item"><span class="al">父子剧类型<span class="req">*</span></span>
+                        <select class="avi" id="o_ps" onchange="onPsChange()"><option>父剧</option><option>子剧</option></select>
+                    </div>
+                    <div class="av-item"><span class="al">书籍状态<span class="req">*</span></span>
+                        <select class="avi"><option>完本</option><option>连载</option></select>
+                    </div>
+                    <div class="av-item hidden" id="o_parentItem"><span class="al">父剧<span class="req">*</span></span>
+                        <input class="avi" id="o_parent" placeholder="请输入父剧名称或ID">
+                    </div>
+                </div>
+                <div class="mark-sub">
+                    <span class="ms-l">标记-漫剧细分</span>
+                    <div class="ms-grid" id="o_subBox">
+                        <label class="ck"><input type="checkbox" name="o_sub" value="仿真人剧">仿真人剧</label>
+                        <label class="ck"><input type="checkbox" name="o_sub" value="2D动态漫">2D动态漫</label>
+                        <label class="ck"><input type="checkbox" name="o_sub" value="3D漫">3D漫</label>
+                        <label class="ck"><input type="checkbox" name="o_sub" value="沙雕漫">沙雕漫</label>
+                        <label class="ck"><input type="checkbox" name="o_sub" value="动态小说漫">动态小说漫</label>
+                        <label class="ck"><input type="checkbox" name="o_sub" value="静态小说漫">静态小说漫</label>
+                        <label class="ck"><input type="checkbox" name="o_sub" value="速推AI剧">速推AI剧</label>
+                        <label class="ck"><input type="checkbox" name="o_sub" value="转绘AI剧">转绘AI剧</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="av-sec">
+                <div class="result-line">
+                    <span class="rl">审核结果<span class="req">*</span></span>
+                    <label class="rd"><input type="radio" name="o_res" value="pass">通过</label>
+                    <label class="rd"><input type="radio" name="o_res" value="back">需修改</label>
+                    <label class="rd"><input type="radio" name="o_res" value="fail">不通过</label>
+                </div>
+                <div class="back-note hidden" id="o_note">
+                    <span class="bl">退回备注<span style="color:var(--red)">*</span></span>
+                    <textarea placeholder="请填写退回/不通过原因"></textarea>
+                </div>
+                <div class="submit-line">
+                    <div class="btn submit" onclick="doOp()">✔ 提交</div>
+                    <div class="btn cancel" onclick="closeOp()">⚡ 取消</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= 同步原始书库 ================= -->
+<div class="panel-mask hidden" id="panSync" onclick="closePans()">
+    <div class="panel" onclick="event.stopPropagation()" style="min-height:0">
+        <div class="panel-hd">
+            <span class="panel-title">同步原始书库</span>
+            <div class="hd-r"><span onclick="coming('窗口最小化')">—</span><span onclick="coming('窗口最大化')">▢</span><span onclick="closePans()">✕</span></div>
+        </div>
+        <div class="sync-body">
+            <div class="sync-row">
+                <span class="sl"><span class="req">*</span>合作方</span>
+                <input class="sync-ipt" id="syPartner" readonly>
+            </div>
+            <div class="sync-row">
+                <span class="sl"><span class="req">*</span>cp名称</span>
+                <input class="sync-ipt" id="syCp" readonly>
+            </div>
+            <div class="sync-row">
+                <span class="sl">无字幕视频去向:</span>
+                <label class="rd"><input type="radio" name="sy_dest" value="原始片库" checked>原始片库</label>
+                <label class="rd"><input type="radio" name="sy_dest" value="无字幕片库">无字幕片库</label>
+                <label class="rd"><input type="radio" name="sy_dest" value="不同步">不同步</label>
+            </div>
+            <div class="sync-row">
+                <span class="sl">字幕文件:</span>
+                <label class="rd"><input type="radio" name="sy_srt" value="同步">同步</label>
+                <label class="rd"><input type="radio" name="sy_srt" value="不同步" checked>不同步</label>
+                <div class="btn dl" onclick="toast('字幕打包中，稍后到下载中心下载')">⬇ 下载字幕</div>
+            </div>
+            <div class="sync-row">
+                <span class="sl">音频文件:</span>
+                <label class="rd"><input type="radio" name="sy_audio" value="同步">同步</label>
+                <label class="rd"><input type="radio" name="sy_audio" value="不同步" checked>不同步</label>
+                <div class="btn dl" onclick="toast('音频打包中，稍后到下载中心下载')">⬇ 下载音频</div>
+            </div>
+            <div class="sync-row">
+                <span class="sl">成片:</span>
+                <label class="rd"><input type="radio" name="sy_cp" value="同步" checked>同步</label>
+                <label class="rd"><input type="radio" name="sy_cp" value="不同步">不同步</label>
+                <span class="sync-hint">（剧信息已同步过，本次可仅同步无字幕）</span>
+            </div>
+            <div class="submit-line">
+                <div class="btn submit" onclick="doSync()">✔ 提交</div>
+                <div class="btn cancel" onclick="closePans()">⚡ 取消</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= 备注编辑 ================= -->
+<div class="panel-mask hidden" id="panNote" onclick="closeNote()">
+    <div class="panel" onclick="event.stopPropagation()">
+        <div class="panel-hd">
+            <span class="panel-title">编辑备注</span>
+            <div class="hd-r"><span onclick="closeNote()">✕</span></div>
+        </div>
+        <div class="note-dlg-body">
+            <div class="note-dlg-sub" id="noteDlgSub"></div>
+            <textarea class="note-ta" id="noteTa" maxlength="200" placeholder="请输入备注内容" oninput="noteCount()"></textarea>
+            <div class="note-count"><span id="noteLen">0</span>/200</div>
+            <div class="submit-line">
+                <div class="btn submit" onclick="saveNote()">✔ 保存</div>
+                <div class="btn cancel" onclick="closeNote()">⚡ 取消</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= 操作记录 ================= -->
+<div class="panel-mask hidden" id="panLog" onclick="closeLog()">
+    <div class="panel" onclick="event.stopPropagation()" style="min-height:0">
+        <div class="panel-hd">
+            <span class="panel-title">操作记录</span>
+            <div class="hd-r"><span onclick="coming('窗口最小化')">—</span><span onclick="coming('窗口最大化')">▢</span><span onclick="closeLog()">✕</span></div>
+        </div>
+        <div class="log-bd">
+            <div class="log-set" onclick="coming('列设置')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg><i>▼</i>
+            </div>
+            <table class="data-table log-table">
+                <thead><tr><th style="width:70px">序号</th><th style="width:130px">操作人</th><th style="width:190px">操作类型</th><th>详情</th><th style="width:200px">时间</th></tr></thead>
+                <tbody id="logBody"></tbody>
+            </table>
+            <div class="log-pager" id="logPager"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= 添加 / 修改 cp配置 ================= -->
+<div class="panel-mask hidden" id="panCpForm" onclick="closeCpForm()">
+    <div class="panel" onclick="event.stopPropagation();pnClose()" style="min-height:0;max-width:1160px">
+        <div class="panel-hd">
+            <span class="panel-title" id="cfTitle">添加cp配置</span>
+            <div class="hd-r"><span onclick="coming('窗口最小化')">—</span><span onclick="coming('窗口最大化')">▢</span><span onclick="closeCpForm()">✕</span></div>
+        </div>
+        <div class="cf-bd">
+            <div class="cf-row"><span class="cf-l"><span class="req">*</span> cp名称</span>
+                <input class="cf-i" id="cf_name" maxlength="100" placeholder="最多100个字符">
+            </div>
+            <div class="cf-row"><span class="cf-l"><span class="req">*</span>合作方名称:</span>
+                <span class="cf-pick" id="cf_partnerBox">
+                    <input class="cf-i" id="cf_partner" placeholder="--请选择--" autocomplete="off"
+                           oninput="pnFilter()" onfocus="pnOpen()" onclick="event.stopPropagation();pnOpen()">
+                    <i class="cf-caret" onclick="event.stopPropagation();pnToggle()">▾</i>
+                    <div class="cf-drop hidden" id="cf_partnerDrop" onclick="event.stopPropagation()"></div>
+                </span>
+            </div>
+            <div class="cf-row"><span class="cf-l">我方主体</span>
+                <input class="cf-i" id="cf_mine" maxlength="100" placeholder="最多100个字符">
+            </div>
+            <div class="cf-row"><span class="cf-l">合同编号</span>
+                <input class="cf-i" id="cf_contract" maxlength="50" placeholder="最多50个字符">
+            </div>
+            <div class="cf-row"><span class="cf-l"><span class="req">*</span> 是否自有</span>
+                <span class="cf-v">
+                    <label class="rd"><input type="radio" name="cf_own" value="是" checked>是</label>
+                    <label class="rd"><input type="radio" name="cf_own" value="否">否</label>
+                </span>
+            </div>
+            <div class="cf-row"><span class="cf-l"><span class="req">*</span> cp类型</span>
+                <span class="cf-v"><label class="rd"><input type="radio" name="cf_type" value="短剧" checked>短剧</label></span>
+            </div>
+            <div class="cf-row"><span class="cf-l"><span class="req">*</span> 引入类型</span>
+                <span class="cf-v">
+                    <label class="rd"><input type="radio" name="cf_intro" value="自制" checked>自制</label>
+                    <label class="rd"><input type="radio" name="cf_intro" value="承制">承制</label>
+                    <label class="rd"><input type="radio" name="cf_intro" value="引入">引入</label>
+                    <label class="rd"><input type="radio" name="cf_intro" value="分销">分销</label>
+                </span>
+            </div>
+            <div class="cf-row"><span class="cf-l"><span class="req">*</span> 超v可用</span>
+                <span class="cf-v">
+                    <label class="rd"><input type="radio" name="cf_sv" value="是" checked>是</label>
+                    <label class="rd"><input type="radio" name="cf_sv" value="否">否</label>
+                </span>
+            </div>
+            <div class="cf-row"><span class="cf-l"><span class="req">*</span> 支持广告</span>
+                <span class="cf-v">
+                    <label class="rd"><input type="radio" name="cf_ad" value="是" checked>是</label>
+                    <label class="rd"><input type="radio" name="cf_ad" value="否">否</label>
+                </span>
+            </div>
+            <div class="cf-row"><span class="cf-l"><span class="req">*</span> 产品线类型</span>
+                <span class="cf-v">
+                    <label class="ck"><input type="checkbox" name="cf_line" value="大陆">大陆</label>
+                    <label class="ck"><input type="checkbox" name="cf_line" value="繁体">繁体</label>
+                    <label class="ck"><input type="checkbox" name="cf_line" value="海外">海外</label>
+                </span>
+            </div>
+            <div class="cf-row"><span class="cf-l">合同开始时间</span>
+                <input class="cf-i" id="cf_start" type="date">
+            </div>
+            <div class="cf-row"><span class="cf-l">合同结束时间</span>
+                <input class="cf-i" id="cf_end" type="date">
+            </div>
+            <div class="submit-line">
+                <div class="btn submit" onclick="doCpForm()">✔ 提交</div>
+                <div class="btn cancel" onclick="closeCpForm()">⚡ 取消</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= 账号管理：修改商务对接人 ================= -->
+<div class="panel-mask hidden" id="panAcctOwner" onclick="closeAcctOwner()">
+    <div class="panel" onclick="event.stopPropagation();apClose()" style="min-height:0;max-width:820px">
+        <div class="panel-hd">
+            <span class="panel-title">修改商务对接人</span>
+            <div class="hd-r"><span onclick="coming('窗口最小化')">—</span><span onclick="coming('窗口最大化')">▢</span><span onclick="closeAcctOwner()">✕</span></div>
+        </div>
+        <div class="cf-bd">
+            <div class="cf-row"><span class="cf-l">账号ID</span><span class="cf-v" id="ao_acct"></span></div>
+            <div class="cf-row"><span class="cf-l">合作方名称</span><span class="cf-v" id="ao_partner"></span></div>
+            <div class="cf-row"><span class="cf-l">当前商务对接人</span><span class="cf-v" id="ao_cur"></span></div>
+            <div class="cf-row"><span class="cf-l"><span class="req">*</span>变更为</span>
+                <span class="cf-pick" id="ao_ownerBox">
+                    <input class="cf-i" id="ao_owner" placeholder="--请选择--" autocomplete="off"
+                           oninput="apFilter()" onfocus="apOpen()" onclick="event.stopPropagation();apOpen()">
+                    <i class="cf-caret" onclick="event.stopPropagation();apToggle()">▾</i>
+                    <div class="cf-drop hidden" id="ao_ownerDrop" onclick="event.stopPropagation()"></div>
+                </span>
+            </div>
+            <div class="submit-line">
+                <div class="btn submit" onclick="doAcctOwner()">✔ 提交</div>
+                <div class="btn cancel" onclick="closeAcctOwner()">⚡ 取消</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= 账号管理：操作记录 ================= -->
+<div class="panel-mask hidden" id="panAcctLog" onclick="closeAcctLog()">
+    <div class="panel" onclick="event.stopPropagation()" style="min-height:0;max-width:1300px">
+        <div class="panel-hd">
+            <span class="panel-title">操作记录</span>
+            <div class="hd-r"><span onclick="coming('窗口最小化')">—</span><span onclick="coming('窗口最大化')">▢</span><span onclick="closeAcctLog()">✕</span></div>
+        </div>
+        <div class="log-bd" style="padding-top:22px;position:relative">
+            <div style="font-size:14px;color:#4a4a4a"><b>账号：</b><span id="alAcct" style="color:var(--teal)"></span></div>
+            <div class="cp-tools" style="top:52px">
+                <div class="cp-tool" onclick="openAcctLog();toast('已刷新')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 11-2.3-5.7M20 4v4h-4"/></svg></div>
+                <div class="cp-tool" onclick="coming('列设置')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg><i>▼</i></div>
+            </div>
+            <table class="data-table" style="margin-top:48px">
+                <thead><tr>
+                    <th style="width:40px"><input type="checkbox" class="cbx" onclick="alCkAll(this)"></th>
+                    <th style="width:140px">操作人</th><th style="width:180px">操作时间</th>
+                    <th style="width:140px">操作项目</th><th>操作内容</th>
+                </tr></thead>
+                <tbody id="alBody"></tbody>
+            </table>
+            <div class="log-pager" id="alPager"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ================= 数据 ================= */
+var T = {
+    s1: { label: '商务待审核', rows: [
+        { id:'6900136274', name:'示例短剧01', type:'真人短剧', partner:'示例传媒G有限公司', cp:'', eps:12, total:'14分钟', ten:'1分钟', cat:'海外男频（LLM）', firstTime:'否', first:'首发', status:'待审核', advice:'示例审核建议：请补充说明', t1:'2026-08-24 16:35:12', t2:'2026-09-07 16:19:57', rater:'超级管理员', payTime:'2026-08-31 10:00:00', sub:'', note:'' },
+        { id:'6900136321', name:'示例短剧02', type:'动漫短剧', partner:'示例传媒E有限公司分公司', cp:'', eps:16, total:'19分钟', ten:'2分钟', cat:'海外男频（LLM）', firstTime:'是', first:'首发', status:'待审核', advice:'', t1:'2026-08-31 10:30:29', t2:'2026-08-31 10:30:29', rater:'', payTime:'2026-09-08 11:07:00', sub:'2D动态漫', note:'' }
+    ]},
+    s1b: { label: '商务退回', rows: [
+        { id:'6900136299', name:'示例短剧03', type:'动漫短剧', partner:'示例传媒E有限公司分公司', cp:'示例CP03', eps:10, total:'12分钟', ten:'4分钟', cat:'海外女频（LLM）', firstTime:'否', first:'首发', status:'商务退回', advice:'封面不符合规范，请调整后重新提交', t1:'2026-08-28 11:20:10', t2:'2026-09-01 09:42:33', rater:'商务员01', payTime:'2026-09-06 12:14:00', sub:'3D漫', note:'' }
+    ]},
+    s2: { label: '待运营审核', rows: [
+        { id:'6900136261', name:'示例短剧04', type:'动漫短剧', partner:'示例传媒E有限公司分公司', cp:'示例CP04', eps:24, total:'28分钟', ten:'2分钟', cat:'短剧男', firstTime:'否', first:'首发', status:'待运营审核', advice:'', t1:'2026-08-21 15:11:29', t2:'2026-08-21 15:13:25', rater:'商务员01', payTime:'2026-08-31 13:21:00', sub:'沙雕漫', note:'', urgent:'加急' },
+        { id:'6900136238', name:'示例短剧05', type:'真人短剧', partner:'', cp:'', eps:18, total:'21分钟', ten:'0分钟', cat:'短剧男', firstTime:'否', first:'首发', status:'待运营审核', advice:'', t1:'2026-08-14 20:17:52', t2:'2026-08-20 21:28:48', rater:'超级管理员', payTime:'2026-08-25 14:28:00', sub:'', note:'' }
+    ]},
+    s2f: { label: '不通过（商务）', rows: [
+        { id:'6900136202', name:'示例短剧06', type:'真人短剧', partner:'示例传媒G有限公司', cp:'示例CP05', eps:14, total:'16分钟', ten:'2分钟', cat:'海外男频（LLM）', firstTime:'否', first:'二轮', status:'不通过', advice:'内容涉及违规，不予合作', t1:'2026-08-10 10:02:11', t2:'2026-08-10 15:30:40', rater:'商务员01', payTime:'2026-08-22 15:35:00', sub:'', note:'' }
+    ]},
+    s3: { label: '运营待审核', rows: [
+        { id:'6900136261', name:'示例短剧04', type:'动漫短剧', partner:'示例传媒E有限公司分公司', cp:'示例CP04', eps:20, total:'23分钟', ten:'2分钟', cat:'短剧男', firstTime:'否', first:'首发', status:'待运营审核', advice:'', t1:'2026-08-21 15:11:29', t2:'2026-08-21 15:13:25', rater:'商务员01', payTime:'2026-09-03 16:42:00', sub:'速推AI剧', note:'', claim:'' },
+        { id:'6900136238', name:'示例短剧05', type:'真人短剧', partner:'', cp:'', eps:11, total:'13分钟', ten:'0分钟', cat:'短剧男', firstTime:'否', first:'首发', status:'待运营审核', advice:'', t1:'2026-08-14 20:17:52', t2:'2026-08-20 21:28:48', rater:'超级管理员', payTime:'2026-08-28 17:49:00', sub:'', note:'', claim:'' },
+        { id:'6900136330', name:'示例短剧07', type:'真人短剧', partner:'示例传媒O有限公司', cp:'示例CP01', eps:18, total:'21分钟', cat:'海外男频（LLM）', firstTime:'否', first:'首发', status:'待运营审核', advice:'', t1:'2026-09-05 09:41:20', t2:'2026-09-08 14:22:10', rater:'商务员01', payTime:'2026-09-14 10:00:00', sub:'', note:'', urgent:'加急', claim:'超级管理员' },
+        { id:'6900136331', name:'示例短剧08', type:'动漫短剧', partner:'示例传媒E有限公司', cp:'示例CP03', eps:24, total:'28分钟', cat:'海外女频（LLM）', firstTime:'是', first:'首发', status:'待运营审核', advice:'', t1:'2026-09-06 11:15:00', t2:'2026-09-09 16:40:33', rater:'商务员01', payTime:'2026-09-16 14:30:00', sub:'2D动态漫', note:'', claim:'李四' },
+        { id:'6900136332', name:'示例短剧09', type:'真人短剧', partner:'示例传媒H有限公司', cp:'示例CP02', eps:16, total:'19分钟', cat:'海外女频（LLM）', firstTime:'否', first:'次新', status:'待运营审核', advice:'', t1:'2026-09-07 15:03:48', t2:'2026-09-10 09:12:05', rater:'商务员01', payTime:'2026-09-18 09:00:00', sub:'', note:'', claim:'' },
+        { id:'6900136333', name:'示例短剧10', type:'动漫短剧', partner:'示例传媒I有限公司', cp:'示例CP05', eps:22, total:'26分钟', cat:'海外男频（LLM）', firstTime:'否', first:'首发', status:'待运营审核', advice:'', t1:'2026-09-08 10:28:16', t2:'2026-09-11 17:50:44', rater:'商务员01', payTime:'2026-09-20 11:20:00', sub:'3D漫', note:'', urgent:'加急', claim:'王五' }
+    ]},
+    s3b: { label: '运营退回', rows: [
+        { id:'6900136255', name:'示例短剧11', type:'动漫短剧', partner:'示例传媒E有限公司分公司', cp:'示例CP01', eps:26, total:'30分钟', ten:'6分钟', cat:'海外男频（LLM）', firstTime:'否', first:'次新', status:'运营退回', advice:'第2集片尾音轨缺失，请补齐', t1:'2026-08-26 14:02:00', t2:'2026-08-27 10:11:23', rater:'张三', payTime:'2026-09-10 10:56:00', sub:'仿真人剧', note:'', urgent:'加急', claim:'张三' }
+    ]},
+    s4: { label: '已通过', rows: [
+        { name:'示例短剧12', type:'动漫短剧', id:'6900136325', partner:'示例传媒A有限公司', cp:'示例CP01', eps:13, total:'15分钟', ten:'2分钟', cat:'海外男频（LLM）', first:'首发', status:'审核通过', sync:'已同步', bookId:'41000004957', t1:'2026-09-09 16:07:00', t2:'2026-09-09 16:08:18', rater:'张三', payTime:'2026-09-16 11:03:00', sub:'2D动态漫', note:'', urgent:'加急', claim:'吴九' },
+        { name:'示例短剧13', type:'真人短剧', id:'6900136324', partner:'示例传媒F有限公司', cp:'示例CP06', eps:22, total:'26分钟', ten:'0分钟', cat:'海外男频（LLM）', first:'二轮', status:'审核通过', sync:'已同步', bookId:'41000004956', t1:'2026-09-09 15:38:50', t2:'2026-09-09 15:57:51', rater:'超级管理员', payTime:'2026-09-17 12:10:00', sub:'', note:'', claim:'郑十' },
+        { name:'示例短剧14', type:'动漫短剧', id:'6900136323', partner:'示例传媒E有限公司分公司', cp:'示例CP01', eps:15, total:'18分钟', ten:'2分钟', cat:'海外男频（LLM）', first:'次新', status:'审核通过', sync:'已同步', bookId:'41000004955', t1:'2026-09-08 20:18:38', t2:'2026-09-08 20:19:38', rater:'张三', payTime:'2026-09-17 13:17:00', sub:'沙雕漫', note:'', claim:'超级管理员' },
+        { name:'示例短剧15', type:'真人短剧', id:'6900136295', partner:'示例传媒G有限公司', cp:'示例CP05', eps:17, total:'20分钟', ten:'5分钟', cat:'海外男频（LLM）', first:'首发', status:'审核通过', sync:'同步中', bookId:'41000004936', t1:'2026-08-31 13:56:10', t2:'2026-08-31 13:57:03', rater:'超级管理员', payTime:'2026-09-10 14:24:00', sub:'', note:'', claim:'李四' },
+        { name:'示例短剧16', type:'动漫短剧', id:'6900136319', partner:'示例传媒E有限公司分公司', cp:'示例CP02', eps:21, total:'25分钟', ten:'2分钟', cat:'海外女频（LLM）', first:'次新', status:'审核通过', sync:'已同步', bookId:'41000004934', t1:'2026-08-29 19:14:08', t2:'2026-08-29 19:14:53', rater:'张三', payTime:'2026-09-09 15:31:00', sub:'静态小说漫', note:'', urgent:'加急', claim:'王五' },
+        { name:'示例短剧17', type:'动漫短剧', id:'6900136318', partner:'示例传媒E有限公司分公司', cp:'示例CP01', eps:10, total:'12分钟', ten:'2分钟', cat:'海外男频（LLM）', first:'二轮', status:'审核通过', sync:'已同步', bookId:'41000004933', t1:'2026-08-29 19:10:05', t2:'2026-08-29 19:11:10', rater:'张三', payTime:'2026-09-10 16:38:00', sub:'速推AI剧', note:'', claim:'张三' },
+        { name:'示例短剧18', type:'动漫短剧', id:'6900136316', partner:'示例传媒G有限公司', cp:'示例CP05', eps:19, total:'22分钟', ten:'0分钟', cat:'海外男频（LLM）', first:'次新', status:'审核通过', sync:'已同步', bookId:'41000004932', t1:'2026-08-29 18:00:44', t2:'2026-08-29 18:10:21', rater:'超级管理员', payTime:'2026-09-11 17:45:00', sub:'转绘AI剧', note:'', claim:'吴九' },
+        { name:'示例短剧19', type:'真人短剧', id:'6900136292', partner:'示例传媒E有限公司分公司', cp:'示例CP01', eps:23, total:'27分钟', ten:'2分钟', cat:'海外男频（LLM）', first:'首发', status:'审核通过', sync:'同步中', bookId:'', t1:'2026-08-28 17:24:18', t2:'2026-08-29 12:17:12', rater:'超级管理员', payTime:'2026-09-11 10:52:00', sub:'', note:'', claim:'郑十' },
+        { name:'示例短剧21', type:'真人短剧', id:'6900136313', partner:'示例传媒F有限公司', cp:'示例CP07', eps:12, total:'14分钟', ten:'2分钟', cat:'海外女频（LLM）', first:'首发', status:'审核通过', sync:'已同步', bookId:'41000004920', t1:'2026-08-29 11:53:13', t2:'2026-08-29 12:16:43', rater:'超级管理员', payTime:'2026-09-13 11:59:00', sub:'', note:'', claim:'超级管理员' },
+        { name:'示例短剧22', type:'动漫短剧', id:'6900136312', partner:'示例传媒E有限公司分公司', cp:'示例CP02', eps:25, total:'29分钟', ten:'6分钟', cat:'海外男频（LLM）', first:'次新', status:'审核通过', sync:'已同步', bookId:'41000004919', t1:'2026-08-28 19:33:35', t2:'2026-08-28 19:35:38', rater:'张三', payTime:'2026-09-04 12:06:00', sub:'3D漫', note:'', claim:'李四' },
+        { name:'示例短剧23', type:'真人短剧', id:'6900136300', partner:'示例传媒E有限公司分公司', cp:'示例CP01', eps:14, total:'16分钟', ten:'8分钟', cat:'海外男频（LLM）', first:'首发', status:'审核通过', sync:'已同步', bookId:'41000004917', t1:'2026-08-28 19:17:52', t2:'2026-08-28 19:22:09', rater:'张三', payTime:'2026-09-05 13:13:00', sub:'', note:'', claim:'王五' },
+        { name:'示例短剧24', type:'动漫短剧', id:'6900136311', partner:'示例传媒G有限公司', cp:'示例CP05', eps:16, total:'19分钟', ten:'5分钟', cat:'海外女频（LLM）', first:'二轮', status:'审核通过', sync:'已同步', bookId:'41000004916', t1:'2026-08-28 18:19:13', t2:'2026-08-28 18:46:25', rater:'超级管理员', payTime:'2026-09-06 14:20:00', sub:'动态小说漫', note:'', claim:'张三' },
+        { name:'示例短剧20', type:'真人短剧', id:'6900136293', partner:'示例传媒E有限公司分公司', cp:'示例CP01', eps:18, total:'21分钟', ten:'2分钟', cat:'海外男频（LLM）', first:'首发', status:'审核通过', sync:'已同步', bookId:'41000004915', t1:'2026-08-28 18:08:12', t2:'2026-08-28 18:11:08', rater:'超级管理员', payTime:'2026-09-07 15:27:00', sub:'', note:'', claim:'吴九' },
+        { name:'示例短剧25', type:'动漫短剧', id:'6900136310', partner:'示例传媒E有限公司分公司', cp:'示例CP02', eps:20, total:'23分钟', ten:'2分钟', cat:'海外男频（LLM）', first:'二轮', status:'审核通过', sync:'未同步', bookId:'', t1:'2026-08-28 16:56:17', t2:'2026-08-28 16:57:08', rater:'张三', payTime:'2026-09-08 16:34:00', sub:'速推AI剧', note:'', claim:'郑十' },
+        { name:'示例短剧26', type:'真人短剧', id:'6900136308', partner:'示例传媒G有限公司', cp:'示例CP05', eps:11, total:'13分钟', ten:'5分钟', cat:'海外男频（LLM）', first:'首发', status:'审核通过', sync:'已同步', bookId:'41000004912', t1:'2026-08-28 16:20:21', t2:'2026-08-28 16:55:20', rater:'超级管理员', payTime:'2026-09-09 17:41:00', sub:'', note:'', claim:'超级管理员' }
+    ]},
+    s4f: { label: '不通过（运营）', rows: [
+        { name:'示例短剧27', type:'真人短剧', id:'6900136188', partner:'示例传媒F有限公司', cp:'示例CP07', eps:13, total:'15分钟', ten:'4分钟', cat:'海外女频（LLM）', first:'首发', status:'不通过', sync:'未同步', bookId:'', t1:'2026-08-12 09:12:00', t2:'2026-08-12 17:44:03', rater:'张三', payTime:'2026-08-25 10:48:00', sub:'', note:'', urgent:'加急', claim:'李四' }
+    ]}
+};
+var STAGE_ORDER = ['s1','s1b','s2','s2f','s3','s3b','s4','s4f'];
+var curStage = 's1';
+var curRow = null;   /* 当前操作的行「对象」（不是下标）：排序、筛选都不会让它指错剧 */
+
+/* 详情页样例数据 */
+var INFO_A = {
+    name: '示例短剧01', alias: '', eps: 1, first: '首发', year: '2026', payPoint: 5, style: '', psd: '示例短剧01_封面源文件.psd', total: '1分钟',
+    desc: '这是一段示例简介文案，仅用于原型演示，不代表任何真实剧情。'.repeat(6),
+    lang: '中文繁体', verNo: '否', excl: '独家', payTime: '2026-08-24 15:49:18', freeDays: '',
+    adult: '否', payType: '按集', platform: 'DramaBox', freeTime: '2026-08-24 15:49:19', scope: '免费',
+    studio: '示例传媒A有限公司', producer: '示例制作人', signer: '示例传媒A有限公司', director: '示例导演', writer: '示例编剧',
+    roles: [
+        { type:'男主', name:'示例角色A', cn:'张三', tw:'張三', en:'Role A', intro:'示例角色简介A', photo:'face' },
+        { type:'女主', name:'示例角色B', cn:'李四', tw:'李四', en:'Role B', intro:'示例角色简介B', photo:'face' }
+    ],
+    covers: ['anime', 'romance', 'aigc']
+};
+var INFO_B = {
+    name: '示例短剧04', alias: '示例别名04', eps: 1, first: '首发', year: '2026', payPoint: 2, style: '沙雕漫', psd: '', total: '2分钟',
+    desc: '这是一段示例简介文案，仅用于原型演示，不代表任何真实剧情。'.repeat(6),
+    lang: '中文繁体', verNo: '否', excl: '独家', payTime: '2026-08-31 00:00:00', freeDays: 100,
+    adult: '否', payType: '按集', platform: 'DramaBox', freeTime: '', scope: '付费,免费',
+    studio: '示例传媒E有限公司', producer: '示例制作人', signer: '示例传媒E有限公司', director: '示例导演', writer: '示例编剧',
+    roles: [ { type:'其他', name:'示例角色A', cn:'', tw:'', en:'', intro:'', photo:'' } ],
+    covers: ['aigc', 'romance']
+};
+
+/* 封面 SVG：动漫版（暗影君王风） / AIGC 红版（大圣风） */
+function coverSvg(kind, uid) {
+    var u = uid || 'a';
+    if (kind === 'romance') {
+        return '<svg viewBox="0 0 345 490" preserveAspectRatio="xMidYMid slice">' +
+            '<defs><linearGradient id="cb3' + u + '" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#ffb8c8"/><stop offset=".5" stop-color="#e2637f"/><stop offset="1" stop-color="#7b2340"/></linearGradient></defs>' +
+            '<rect width="345" height="490" fill="url(#cb3' + u + ')"/>' +
+            '<circle cx="268" cy="88" r="52" fill="#fff2c9" opacity=".45"/>' +
+            '<ellipse cx="172" cy="476" rx="210" ry="84" fill="#5d1730" opacity=".5"/>' +
+            '<path d="M0 404 Q86 356 178 392 T345 372 L345 490 L0 490Z" fill="#63182f" opacity=".7"/>' +
+            '<circle cx="132" cy="196" r="33" fill="#f7d9c0"/>' +
+            '<path d="M99 190 q4 -46 34 -44 q32 2 32 44 q-6 -22 -30 -20 q-22 4 -36 20z" fill="#2b1620"/>' +
+            '<path d="M104 234 q28 -14 56 0 q22 12 20 62 l-96 0 q-2 -50 20 -62z" fill="#fdf3f5"/>' +
+            '<circle cx="214" cy="206" r="31" fill="#f2c9ab"/>' +
+            '<path d="M183 202 q2 -42 31 -40 q30 2 30 40 q-8 -20 -30 -18 q-20 4 -31 18z" fill="#1d1218"/>' +
+            '<path d="M188 240 q26 -12 52 0 q20 10 18 56 l-88 0 q-2 -46 18 -56z" fill="#28303f"/>' +
+            '<path d="M172 150 q-13 -16 -26 -4 q-11 11 2 24 l24 24 24 -24 q13 -13 2 -24 q-13 -12 -26 4z" fill="#fff" opacity=".9"/>' +
+            '<text x="32" y="428" font-size="35" font-weight="900" fill="#fff" style="text-shadow:2px 2px 6px #5a1128">示例封面A</text>' +
+            '<text x="32" y="466" font-size="26" font-weight="800" fill="#ffe3ea">言情样例</text>' +
+        '</svg>';
+    }
+    if (kind === 'aigc') {
+        return '<svg viewBox="0 0 345 490" preserveAspectRatio="xMidYMid slice">' +
+            '<defs><radialGradient id="cb1' + u + '" cx=".45" cy=".38" r=".9"><stop offset="0" stop-color="#ff6a2e"/><stop offset=".55" stop-color="#d92b10"/><stop offset="1" stop-color="#7e0d06"/></radialGradient></defs>' +
+            '<rect width="345" height="490" fill="url(#cb1' + u + ')"/>' +
+            '<ellipse cx="150" cy="150" rx="150" ry="110" fill="#ff8f3d" opacity=".38"/>' +
+            '<circle cx="300" cy="70" r="58" fill="#ffd98a" opacity=".5"/>' +
+            '<path d="M0 430 Q90 330 180 400 T345 390 L345 490 L0 490Z" fill="#5c0703" opacity=".85"/>' +
+            '<path d="M70 470 q60 -90 45 -140" stroke="#300" stroke-width="7" fill="none" opacity=".8"/>' +
+            '<path d="M96 210 l10 -26 8 24 20 6 -20 8 -8 22 -10 -22 -22 -8z" fill="#ffce6b"/>' +
+            '<circle cx="236" cy="250" r="34" fill="#ffd0a0"/>' +
+            '<circle cx="236" cy="206" r="30" fill="#e8541c"/>' +
+            '<circle cx="214" cy="198" r="16" fill="#ec6a28"/><circle cx="258" cy="196" r="16" fill="#ec6a28"/>' +
+            '<rect x="218" y="238" width="36" height="64" rx="10" fill="#7a120a"/>' +
+            '<rect x="206" y="250" width="64" height="10" rx="5" fill="#ffb03a"/>' +
+            '<line x1="168" y1="316" x2="268" y2="182" stroke="#ffb03a" stroke-width="7" stroke-linecap="round"/>' +
+            '<text x="28" y="430" font-size="34" font-weight="800" fill="#fff" font-family="STKaiti,KaiTi,serif" style="text-shadow:2px 2px 6px #500">示例封面B</text>' +
+            '<text x="28" y="466" font-size="27" font-weight="800" fill="#ffe9c9" font-family="STKaiti,KaiTi,serif">玄幻样例</text>' +
+        '</svg>';
+    }
+    return '<svg viewBox="0 0 345 490" preserveAspectRatio="xMidYMid slice">' +
+        '<defs><radialGradient id="cb2' + u + '" cx=".5" cy=".34" r=".95"><stop offset="0" stop-color="#3a4668"/><stop offset=".6" stop-color="#1b2238"/><stop offset="1" stop-color="#0a0d18"/></radialGradient></defs>' +
+        '<rect width="345" height="490" fill="url(#cb2' + u + ')"/>' +
+        '<path d="M0 60 Q80 26 170 54 T345 40 L345 0 L0 0Z" fill="#4a5880" opacity=".5"/>' +
+        '<ellipse cx="170" cy="470" rx="220" ry="90" fill="#5e6a96" opacity=".35"/>' +
+        '<circle cx="112" cy="180" r="5" fill="#9fc6ff"/><circle cx="250" cy="120" r="3.4" fill="#9fc6ff"/><circle cx="300" cy="220" r="4" fill="#9fc6ff"/>' +
+        '<path d="M108 250 q-40 22 -34 76 q6 44 46 44 q8 0 14 -4 q48 24 92 -6 q40 -26 30 -84 q-8 -48 -58 -56 q-62 -8 -90 30z" fill="#141a2c"/>' +
+        '<circle cx="172" cy="176" r="34" fill="#e8c9ac"/>' +
+        '<path d="M132 168 q6 -50 44 -48 q42 2 36 52 q2 -26 -20 -26 q-34 6 -60 22z" fill="#11141f"/>' +
+        '<rect x="240" y="200" width="34" height="80" rx="8" fill="#0d1120"/>' +
+        '<line x1="116" y1="330" x2="230" y2="118" stroke="#c9cfdc" stroke-width="7" stroke-linecap="round"/>' +
+        '<line x1="120" y1="336" x2="234" y2="124" stroke="#5f6780" stroke-width="2.4" stroke-linecap="round"/>' +
+        '<path d="M44 392 l16 -30 12 26 22 8 -22 10 -10 26 -14 -26 -22 -10z" fill="#86a8ff" opacity=".85"/>' +
+        '<rect x="96" y="368" width="92" height="26" rx="4" fill="none" stroke="#ffb03a" stroke-width="1.6"/>' +
+        '<text x="108" y="387" font-size="14" font-weight="700" fill="#ffd24d">示例标签</text>' +
+        '<text x="40" y="428" font-size="36" font-weight="900" fill="#fff">示例封面C</text>' +
+        '<text x="40" y="470" font-size="36" font-weight="900" fill="#fff">都市样例</text>' +
+    '</svg>';
+}
+/* 婚礼剧照 */
+function weddingSvg() {
+    return '<svg viewBox="0 0 514 560" preserveAspectRatio="xMidYMid slice">' +
+        '<rect width="514" height="560" fill="#efe0cf"/>' +
+        '<path d="M0 0h514v240 q-240 70 -514 -10z" fill="#faf3e9"/>' +
+        '<path d="M60 0 q40 90 10 210 l-70 -14z" fill="#fbf8f2"/>' +
+        '<path d="M420 0 q-20 100 30 216 l64 -20z" fill="#fbf8f2"/>' +
+        '<path d="M150 -20 l30 60 -12 30 -30 -60z" fill="#ffd24d"/>' +
+        '<circle cx="120" cy="220" r="26" fill="#f8d94e"/><circle cx="152" cy="210" r="22" fill="#f4cd42"/><circle cx="140" cy="248" r="24" fill="#fbe36a"/><circle cx="108" cy="256" r="20" fill="#f7dd58"/>' +
+        '<circle cx="96" cy="180" r="18" fill="#fbdf5e"/><circle cx="168" cy="176" r="16" fill="#fdd820"/>' +
+        '<rect x="66" y="476" width="382" height="84" fill="#8a6544"/>' +
+        '<ellipse cx="368" cy="330" rx="64" ry="24" fill="#f7f2ec"/>' +
+        '<path d="M414 300 q70 4 74 96 q2 66 -32 96 l-56 -12 q38 -80 14 -180z" fill="#fff"/>' +
+        '<path d="M430 288 q52 10 58 84 q4 62 -24 92 l-10 0 q36 -88 -24 -180z" fill="#fdfbf8"/>' +
+        '<rect x="392" y="226" width="36" height="68" rx="16" fill="#f6d2ba"/>' +
+        '<path d="M384 246 q44 -10 52 38 l-52 4z" fill="#46352b"/>' +
+        '<path d="M412 236 q22 2 20 22 l-24 4z" fill="#fff"/>' +
+        '<rect x="200" y="330" width="56" height="150" fill="#2e2a33"/>' +
+        '<rect x="196" y="298" width="66" height="90" rx="10" fill="#38333f"/>' +
+        '<circle cx="230" cy="270" r="24" fill="#f0cfa8"/>' +
+        '<rect x="206" y="246" width="48" height="18" rx="8" fill="#3a2f28"/>' +
+        '<path d="M266 300 q26 10 22 40 l-20 10z" fill="#f7ead8"/>' +
+        '<g fill="#f2a6bd"><circle cx="330" cy="180" r="6"/><circle cx="346" cy="168" r="5"/><circle cx="318" cy="170" r="5"/><circle cx="338" cy="192" r="4"/></g>' +
+        '<g fill="#ffb3c6" opacity=".7"><circle cx="90" cy="340" r="5"/><circle cx="76" cy="320" r="4"/><circle cx="108" cy="316" r="4"/></g>' +
+    '</svg>';
+}
+
+/* ================= 阶段页签 ================= */
+function renderStageTabs() {
+    var el = document.getElementById('stageTabs');
+    el.innerHTML = STAGE_ORDER.map(function (k) {
+        return '<div class="stage' + (k === curStage ? ' on' : '') + '" data-stage="' + k + '" onclick="switchStage(\'' + k + '\')">' + T[k].label + '</div>';
+    }).join('');
+}
+function switchStage(k) {
+    curStage = k;
+    hideAllPanels();
+    renderStageTabs();
+    resetFilters();   /* 各 tab 筛选条件独立：切换即复位，避免框里留着上个 tab 的条件、列表却是全量 */
+    renderGrid();
+    /* 已通过页多两个筛选；中间的“是否首次提审”只在非已通过页放第1行 */
+    var passed = k === 's4';
+    document.getElementById('qL_firstTime').style.display = passed ? 'none' : '';
+    document.getElementById('q_firstTime').style.display = passed ? 'none' : '';
+    document.getElementById('qL_book').style.display = passed ? '' : 'none';
+    document.getElementById('q_book').style.display = passed ? '' : 'none';
+    document.getElementById('qL_sync').style.display = passed ? '' : 'none';
+    document.getElementById('q_sync').style.display = passed ? '' : 'none';
+    document.getElementById('qL_firstTime2').style.display = passed ? '' : 'none';
+    document.getElementById('q_firstTime2').style.display = passed ? '' : 'none';
+    /* 加急标记在商务审核通过时才产生，故只在其后的阶段提供筛选 */
+    var hasUrgent = ['s2','s3','s3b','s4','s4f'].indexOf(k) >= 0;
+    document.getElementById('qL_urgent').style.display = hasUrgent ? '' : 'none';
+    document.getElementById('q_urgent').style.display = hasUrgent ? '' : 'none';
+    /* 搜索/清空：已通过页在第2行（图：商务待审核也是第2行），占位避免布局跳动 */
+    document.getElementById('rowActions1').style.visibility = 'hidden';
+    document.getElementById('rowActions2').style.display = 'flex';
+}
+
+/* ================= 表格 ================= */
+function stageCols() {
+    /* 运营负责人 = 认领人；商务审核阶段（s1/s1b/s2f）还没认领，整列不显示 */
+    var bizStage = curStage === 's1' || curStage === 's1b' || curStage === 's2f';
+    if (curStage === 's4') {
+        return [ {key:'__ck'},{key:'__idx',label:'序号'},{key:'name',label:'短剧名称'},{key:'type',label:'短剧类型'},{key:'id',label:'ID'},{key:'partner',label:'合作方名称',w:'112px'},{key:'cp',label:'cp名称'},{key:'eps',label:'集数'},{key:'total',label:'总时长'},{key:'first',label:'是否首发'},{key:'sync',label:'同步状态'},{key:'bookId',label:'原始书库ID'},{key:'payTime',label:'付费上架时间',w:'130px',sort:true},{key:'t1',label:'首次提审时间',w:'130px',sort:true},{key:'t2',label:'评级时间'},{key:'bizOwner',label:'商务对接人',w:'100px'},{key:'claim',label:'运营负责人',w:'100px'},{key:'note',label:'备注',w:'230px'},{key:'__ops',label:'操作'} ];
+    }
+    var cols = [ {key:'__idx',label:'序号'},{key:'name',label:'短剧名称'},{key:'type',label:'短剧类型'},{key:'id',label:'ID'},{key:'partner',label:'合作方名称',w:'112px'} ];
+    if (curStage === 's3') cols.push({key:'cp',label:'cp名称'});
+    cols.push({key:'eps',label:'集数'},{key:'total',label:'总时长'});
+    if (curStage === 's1') cols.push({key:'firstTime',label:'是否首次提审'});
+    cols.push({key:'first',label:'是否首发'});
+    /* 当前阶段状态：各 tab 的状态值只是重复 tab 名，仅「待运营审核」保留该列 */
+    if (curStage === 's2') cols.push({key:'status',label:'当前阶段状态'});
+    cols.push({key:'advice',label:'审核建议',w:'230px'});
+    cols.push({key:'payTime',label:'付费上架时间',w:'130px',sort:true});
+    if (curStage === 's3') { cols.push({key:'t1',label:'首次提审时间',w:'130px',sort:true}); cols.push({key:'t2',label:'评级时间'}); }
+    else { cols.push({key:'t1',label:'首次提审时间',w:'130px',sort:true}); cols.push({key:'t2',label:'最新提审时间'}); }
+    cols.push({key:'bizOwner',label:'商务对接人',w:'100px'});
+    if (!bizStage) cols.push({key:'claim',label:'运营负责人',w:'100px'});
+    cols.push({key:'note',label:'备注',w:'230px'},{key:'__ops',label:'操作'});
+    return cols;
+}
+function visibleCols() {
+    var cols = stageCols();
+    var off = {};
+    document.querySelectorAll('#colMenu input').forEach(function (c) { if (!c.checked) off[c.value] = 1; });
+    return cols.filter(function (c) { return !off[c.key]; });
+}
+function renderColMenu() {
+    document.getElementById('colMenu').innerHTML = stageCols().map(function (c) {
+        return c.__ck || c.__idx || c.__ops ? '' : '<label><input type="checkbox" value="' + c.key + '" checked onchange="renderGrid()">' + c.label + '</label>';
+    }).join('');
+}
+/* 排序：付费上架时间 / 首次提审时间，点表头切换 升序→降序→不排序 */
+var sortKey = null, sortDir = null;
+function toggleSort(key) {
+    if (sortKey !== key) { sortKey = key; sortDir = 'asc'; }
+    else if (sortDir === 'asc') sortDir = 'desc';
+    else { sortKey = null; sortDir = null; }
+    renderGrid();
+    var nm = key === 'payTime' ? '付费上架时间' : '首次提审时间';
+    toast(sortDir === 'asc' ? ('按' + nm + '升序') : (sortDir === 'desc' ? ('按' + nm + '降序') : '已取消排序'));
+}
+/* 当前屏幕上渲染的行对象（已排序/已筛选）。备注弹窗按可见序号取行，不受排序、筛选影响 */
+var GRID_ROWS = [];
+/* 备注是用户输入，拼进 HTML 前先转义 */
+function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function renderGrid() {
+    var rows = T[curStage].rows.slice(), cols = visibleCols();
+    if (sortKey) {
+        rows.sort(function (a, b) {
+            var x = a[sortKey] || '', y = b[sortKey] || '';
+            if (x === y) return 0;
+            return sortDir === 'asc' ? (x < y ? -1 : 1) : (x < y ? 1 : -1);
+        });
+    }
+    GRID_ROWS = rows;
+    document.getElementById('gridHead').innerHTML = cols.map(function (c) {
+        if (c.key === '__ck') return '<th style="width:36px"><input type="checkbox" class="cbx" onclick="ckAll(this)"></th>';
+        var w = c.w ? ' style="width:' + c.w + '"' : '';
+        if (c.sort) {
+            var on = sortKey === c.key;
+            var ar = on ? '<i class="sa on">' + (sortDir === 'asc' ? '▲' : '▼') + '</i>' : '<i class="sa">⇅</i>';
+            return '<th' + w + ' class="th-sort" onclick="toggleSort(\'' + c.key + '\')">' + c.label + ar + '</th>';
+        }
+        return '<th' + w + '>' + c.label + '</th>';
+    }).join('');
+    var html = '';
+    rows.forEach(function (r, i) {
+        html += '<tr>' + cols.map(function (c) {
+            if (c.key === '__ck') return '<td><input type="checkbox" class="cbx"></td>';
+            if (c.key === '__idx') return '<td>' + (i + 1) + '</td>';
+            if (c.key === 'name') {
+                return '<td><span class="nm-cell">' + r.name +
+                    (r.urgent === '加急' ? '<span class="urgent-tag" title="加急审批">加急</span>' : '') + '</span></td>';
+            }
+            if (c.key === 'note') {
+                var nv = r.note || '';
+                return '<td class="note-td"><div class="note-view' + (nv ? '' : ' empty') + '" title="' +
+                    (nv ? '点击编辑备注' : '点击添加备注') + '" onclick="openNote(' + i + ', this)">' +
+                    (nv ? esc(nv) : '＋ 添加备注') + '</div>' +
+                    /* 有备注才给编辑图标；渐隐+按钮先出，由 markNoteMore() 按实际是否截断决定显隐 */
+                    (nv ? '<span class="note-edit">✎</span>' +
+                          '<span class="note-fade hidden"></span>' +
+                          '<span class="note-more hidden">展开全文</span>' : '') +
+                    '</td>';
+            }
+            if (c.key === 'bizOwner') return '<td>' + rowBizOwner(r) + '</td>';
+            /* 运营负责人 = 认领人；运营待审核页未认领时用灰字提示 */
+            if (c.key === 'claim') {
+                if (r.claim) return '<td>' + (r.claim === ME ? r.claim + '（我）' : r.claim) + '</td>';
+                return '<td>' + (curStage === 's3' ? '<span class="unclaimed">未认领</span>' : '') + '</td>';
+            }
+            if (c.key === 'sync') {
+                var cls = r.sync === '已同步' ? 'sy-done' : (r.sync === '同步中' ? 'sy-ing' : 'sy-none');
+                return '<td><span class="sy-tag ' + cls + '">' + (r.sync || '未同步') + '</span></td>';
+            }
+            if (c.key === '__ops') {
+                /* 运营待审核：认领制。未认领→详情+认领；他人已认领→只显示"xxx已认领"；自己认领→详情+释放 */
+                if (curStage === 's3') {
+                    if (!r.claim) {
+                        return '<td><div class="btn teal sm" onclick="openInfo(' + i + ')">详情</div>' +
+                            '<div class="btn blue sm" onclick="doClaim(' + i + ')">认领</div></td>';
+                    }
+                    /* 别人认领的剧：仍可查看详情，按钮下方标注认领人 */
+                    if (r.claim !== ME) return '<td><div class="btn teal sm" onclick="openInfo(' + i + ')">详情</div>' +
+                        '<div class="claimed-by">' + r.claim + ' 已认领</div></td>';
+                    return '<td><div class="btn teal sm" onclick="openInfo(' + i + ')">详情</div>' +
+                        '<div class="btn rose sm" onclick="doRelease(' + i + ')">释放</div></td>';
+                }
+                var ops = '<div class="btn teal sm" onclick="openInfo(' + i + ')">详情</div>';
+                if (curStage === 's4') ops += '<div class="btn teal sm" onclick="openSync(' + i + ')">同步</div>';
+                return '<td>' + ops + '</td>';
+            }
+            return '<td>' + (r[c.key] !== undefined && r[c.key] !== '' ? r[c.key] : '') + '</td>';
+        }).join('') + '</tr>';
+    });
+    document.getElementById('gridBody').innerHTML = html || '<tr><td colspan="' + cols.length + '" style="padding:40px 0;color:#aaa">暂无数据</td></tr>';
+    document.getElementById('pagerLine').textContent = '显示第 1 到第 ' + rows.length + ' 条记录，总共 ' + rows.length + ' 条记录';
+    markNoteMore();
+}
+/* 渐隐+按钮只在内容真被 3 行截断时出现：中英文混排字宽差太大，只能渲染后实测高度 */
+function markNoteMore() {
+    document.querySelectorAll('#gridBody .note-td').forEach(function (td) {
+        var view = td.querySelector('.note-view'),
+            fade = td.querySelector('.note-fade'), more = td.querySelector('.note-more');
+        if (!view || !more) return;
+        var over = view.scrollHeight > view.clientHeight + 1;
+        if (fade) fade.classList.toggle('hidden', !over);
+        more.classList.toggle('hidden', !over);
+    });
+}
+/* ===== 备注：单元格只读展示，点击弹窗编辑 ===== */
+var noteRow = null, noteCell = null;
+function openNote(i, el) {
+    noteRow = GRID_ROWS[i];
+    if (!noteRow) return;
+    noteCell = el;
+    document.getElementById('noteDlgSub').textContent = noteRow.name + '（ID ' + noteRow.id + '）';
+    var ta = document.getElementById('noteTa');
+    ta.value = noteRow.note || '';
+    noteCount();
+    stackOpen('panNote');
+    ta.focus();
+}
+function noteCount() {
+    document.getElementById('noteLen').textContent = document.getElementById('noteTa').value.length;
+}
+function closeNote() { stackClose('panNote'); noteRow = null; noteCell = null; }
+function saveNote() {
+    if (!noteRow) return;
+    var v = document.getElementById('noteTa').value.trim();
+    noteRow.note = v;
+    /* 只回填被点的那个单元格，不整表重渲染，避免把当前的筛选/排序结果冲掉 */
+    if (noteCell) {
+        noteCell.textContent = v || '＋ 添加备注';
+        noteCell.classList.toggle('empty', !v);
+        noteCell.title = v ? '点击编辑备注' : '点击添加备注';
+        /* ✎ / 渐隐 / 按钮是 td 下的兄弟节点，得跟着内容一起增删 */
+        var td = noteCell.parentNode;
+        var edit = td.querySelector('.note-edit'),
+            fade = td.querySelector('.note-fade'), more = td.querySelector('.note-more');
+        if (v && !edit) {
+            td.insertAdjacentHTML('beforeend',
+                '<span class="note-edit">✎</span><span class="note-fade hidden"></span><span class="note-more hidden">展开全文</span>');
+        } else if (!v) {
+            if (edit) edit.remove();
+            if (fade) fade.remove();
+            if (more) more.remove();
+        }
+        markNoteMore();
+    }
+    closeNote();
+    toast(v ? '备注已保存' : '备注已清空');
+}
+/* ===== 认领（运营待审核） ===== */
+var ME = '超级管理员';   /* 当前登录人 */
+function doClaim(i) {
+    var r = GRID_ROWS[i];
+    if (!r) return;
+    if (r.claim) return toast(r.claim + ' 已认领该剧');
+    r.claim = ME;
+    renderGrid();
+    toast('已认领「' + r.name + '」，可进入详情进行短剧评级');
+}
+function doRelease(i) {
+    var r = GRID_ROWS[i];
+    if (!r) return;
+    if (r.claim !== ME) return toast('只能释放自己认领的短剧');
+    if (!confirm('确认释放「' + r.name + '」吗？释放后其他人可重新认领。')) return;
+    r.claim = '';
+    renderGrid();
+    toast('已释放「' + r.name + '」');
+}
+function ckAll(box) {
+    document.querySelectorAll('#gridBody .cbx').forEach(function (c) { c.checked = box.checked; });
+}
+document.addEventListener('click', function () { document.getElementById('colMenu').classList.add('hidden'); pnClose(); apClose(); });
+
+/* ================= 查询 ================= */
+function tQuery() {
+    var kwName = document.getElementById('q_name').value.trim(), kwId = document.getElementById('q_id').value.trim(),
+        first = document.getElementById('q_first').value,
+        cp = document.getElementById('q_cp').value, typ = document.getElementById('q_type').value,
+        partner = document.getElementById('q_partner').value.trim(),
+        claim = document.getElementById('q_claim').value,
+        biz = document.getElementById('q_bizOwner').value,
+        urgent = document.getElementById('q_urgent').value;
+    var rows = T[curStage].rows.filter(function (r) {
+        if (kwId && r.id.indexOf(kwId) < 0) return false;
+        if (kwName && r.name.indexOf(kwName) < 0) return false;
+        if (claim !== '-全部-') {
+            if (claim === '未认领') { if (r.claim) return false; }
+            else if (claim === '超级管理员（我）') { if (r.claim !== ME) return false; }
+            else if (r.claim !== claim) return false;
+        }
+        if (first !== '-全部-' && r.first !== first) return false;
+        if (cp !== '--请选择--' && r.cp !== cp) return false;
+        if (typ !== '-全部-' && r.type !== typ) return false;
+        if (partner && (r.partner || '').indexOf(partner) < 0) return false;
+        /* 商务对接人：列里显示的是 rowBizOwner(r)，不是行上的 rater，筛选必须用同一个来源 */
+        if (biz !== '-全部-') {
+            var bo = rowBizOwner(r);
+            if (biz === '未分配') { if (bo) return false; }   /* 未绑 CP / CP 无对接人 */
+            else if (bo !== biz) return false;
+        }
+        /* 是否加急：老数据没有 urgent 字段，按「不加急」处理 */
+        if (urgent !== '-全部-' && (r.urgent === '加急' ? '加急' : '不加急') !== urgent) return false;
+        return true;
+    });
+    var bak = T[curStage].rows;
+    T[curStage].rows = rows;
+    renderGrid();
+    T[curStage].rows = bak;
+    var badge = document.getElementById('pagerLine').textContent;
+    toast('筛选出 ' + rows.length + ' 条（演示不改动原始数据）');
+}
+/* 筛选条件复位：切 tab 和「清空」按钮共用，新增筛选框只要往这两个数组里加 */
+function resetFilters() {
+    ['q_id','q_name','q_partner','q_book'].forEach(function (id) { document.getElementById(id).value = ''; });
+    ['q_first','q_firstTime','q_firstTime2','q_cp','q_sync','q_type','q_claim','q_bizOwner','q_urgent'].forEach(function (id) { document.getElementById(id).selectedIndex = 0; });
+}
+function tClear() {
+    resetFilters();
+    renderGrid();
+    toast('已清空筛选条件');
+}
+
+/* 除两条截图样例外，其余记录以样例为模板，把占位文案换成本剧名称、并套用列表里的真实字段 */
+function buildInfo(d) {
+    var i;
+    if (d.name === '示例短剧01') i = JSON.parse(JSON.stringify(INFO_A));
+    else if (d.name === '示例短剧04') i = JSON.parse(JSON.stringify(INFO_B));
+    else i = null;
+    if (i) { i.sub = d.sub || ''; i.cat = d.cat || ''; return i; }
+    var anime = d.type === '动漫短剧';
+    i = JSON.parse(JSON.stringify(anime ? INFO_B : INFO_A));
+    var fill = function (v) {
+        return typeof v === 'string' ? v.replace(/示例短剧01/g, d.name).replace(/示例短剧04/g, d.name) : v;
+    };
+    Object.keys(i).forEach(function (k) { if (k !== 'roles' && k !== 'cover') i[k] = fill(i[k]); });
+    i.roles = i.roles.map(function (r) {
+        var o = {}; Object.keys(r).forEach(function (k) { o[k] = k === 'photo' ? r.photo : fill(r[k]); }); return o;
+    });
+    /* 列表里已有的字段直接用真实值，避免每条详情长得一模一样 */
+    i.name = d.name;
+    i.alias = '';
+    i.eps = d.eps;
+    i.total = d.total;
+    /* 其余剧按 ID 稳定分配 1~3 张封面，便于演示多封面切换 */
+    var seed = 0, key = String(d.id || d.name || '');
+    for (var q = 0; q < key.length; q++) seed = (seed * 31 + key.charCodeAt(q)) % 99991;
+    var pool = anime ? ['aigc', 'romance', 'anime'] : ['anime', 'romance', 'aigc'];
+    i.covers = pool.slice(0, (seed % 3) + 1);
+    i.psd = (seed % 3 === 0) ? '' : (d.name + '_封面源文件.psd');
+    i.sub = d.sub || '';
+    i.cat = d.cat || '';   /* 一级分类取列表行上的真实值 */
+    if (d.partner) { i.studio = d.partner; i.signer = d.partner; }
+    return i;
+}
+
+/* ================= 详情（短剧信息） ================= */
+function openInfo(i) {
+    /* 从剧集信息页切回来时不带序号，沿用当前行 */
+    if (i !== undefined) curRow = GRID_ROWS[i];
+    var d = curRow;
+    if (!d) return;
+    var info = buildInfo(d);
+    window.__INFO = info;
+    document.getElementById('piStatus').textContent = d.status || '待审核';
+    /* 已通过（已评完级）不再显示「短剧评级」入口 */
+    var rated = !canRate(d);
+    document.getElementById('piRatingBtn').style.display = rated ? 'none' : '';
+    document.getElementById('piOps').style.display = rated ? 'none' : '';
+    renderCovers(info.covers && info.covers.length ? info.covers : [info.cover || 'anime'], 0);
+    document.getElementById('piInfo').innerHTML =
+        ig('短剧名称', info.name) + (info.alias ? ig('短剧别名', info.alias) : '') +
+        ig('总集数', info.eps) +
+        '<div class="ig-row">' + half('是否首发', info.first) + half('发行年份', info.year, true) + '</div>' +
+        ig('付费卡点', info.payPoint) +
+        ig('一级分类', info.cat || '—') +
+        ig('漫剧细分类型', info.sub || '—') +
+        '<div class="ig-row">' + half('封面psd文件', psdCell(info.psd)) + half('剧集总时长', info.total, true) + '</div>' +
+        '<div class="ig-row"><span class="ig-l">简介</span><span class="ig-v desc-col">' + info.desc + '</span><span class="edit-bd" onclick="coming(\'编辑简介\')">✎ 编辑</span></div>';
+    document.getElementById('piRight').innerHTML =
+        '<div class="ig-row">' + col('语种', info.lang) + col('是否18+', info.adult) + '</div>' +
+        '<div class="ig-row">' + col('是否压版号', info.verNo) + col('支付方式', info.payType) + '</div>' +
+        '<div class="ig-row">' + col('独家类型', info.excl) + col('首发平台', info.platform) + '</div>' +
+        '<div class="ig-row">' + col('付费上线时间', info.payTime) + col('免费上线时间', info.freeTime) + '</div>' +
+        '<div class="ig-row">' + col('转免天数', info.freeDays) + col('版权生效范围', info.scope) + '</div>';
+    document.getElementById('piTeam').innerHTML =
+        '<div class="ig-row">' + col('制作机构', info.studio) + col('导演', info.director) + '</div>' +
+        '<div class="ig-row">' + col('制作人', info.producer) + col('编剧', info.writer) + '</div>' +
+        '<div class="ig-row">' + col('签约主体', info.signer) + '</div>';
+    document.getElementById('piRoles').innerHTML = info.roles.map(function (r) {
+        return '<tr><td>' + r.type + '</td><td>' + r.name + '</td><td>' + r.cn + '</td><td>' + r.tw + '</td><td>' + r.en + '</td><td>' + r.intro + '</td>' +
+        '<td>' + (r.photo === 'face' ? '<span class="role-photo face" title="角色照片"></span>' : '') + '</td></tr>';
+    }).join('');
+    document.getElementById('panInfo').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+/* 封面最多 3 张：大图 + 下方小图，点小图切换 */
+var curCovers = [];
+function renderCovers(list, idx) {
+    curCovers = list;
+    document.getElementById('piCover').innerHTML = coverSvg(list[idx], 'big');
+    var box = document.getElementById('piThumbs');
+    if (list.length < 2) { box.innerHTML = ''; return; }   /* 只有一张就不显示小图 */
+    box.innerHTML = list.map(function (k, i) {
+        return '<div class="cover-thumb' + (i === idx ? ' on' : '') + '" title="封面' + (i + 1) + '" onclick="pickCover(' + i + ')">' +
+            coverSvg(k, 't' + i) + '<i>' + (i + 1) + '</i></div>';
+    }).join('') + '<div class="cover-count" style="align-self:flex-end;margin-left:6px">共 ' + list.length + ' 张</div>';
+}
+function pickCover(i) {
+    document.getElementById('piCover').innerHTML = coverSvg(curCovers[i], 'big');
+    document.querySelectorAll('#piThumbs .cover-thumb').forEach(function (t, k) { t.classList.toggle('on', k === i); });
+}
+/* 封面psd：未上传置灰，已上传显示文件名并可下载 */
+function psdCell(v) {
+    if (!v) return '<span class="no-file">未上传</span>';
+    return '<span class="has-file">' + v + '</span>' +
+        '<span class="file-dl" style="margin-left:10px" onclick="dlPsd(&quot;' + v + '&quot;)">下载</span>';
+}
+function dlPsd(nm) { toast('正在下载 ' + nm + '（演示）'); }
+function ig(l, v) { return '<div class="ig-row"><span class="ig-l">' + l + '</span><span class="ig-v">' + v + '</span></div>'; }
+function half(l, v, right) { return '<span class="ig-l">' + l + '</span><span class="ig-v"' + (right ? '' : ' style="width:318px"') + '>' + (v === undefined || v === '' ? '' : v) + '</span>'; }
+function col(l, v) { return '<span class="ig-l">' + l + '</span><span class="ig-v" style="width:318px">' + (v || '') + '</span>'; }
+
+/* ================= 剧集信息 ================= */
+function openEpi() {
+    document.getElementById('panInfo').classList.add('hidden');
+    document.getElementById('panEpi').classList.remove('hidden');
+    var d = curRow || {};
+    document.getElementById('peStatus').textContent = d.status || '待审核';
+    /* 已通过（已评完级）不再显示「短剧评级」入口 */
+    var rated = !canRate(d);
+    document.getElementById('peRatingBtn').style.display = rated ? 'none' : '';
+    document.getElementById('peOps').style.display = rated ? 'none' : '';
+    document.getElementById('playerArt').innerHTML = weddingSvg();
+    switchMini(document.querySelector('#panEpi .mini-tab[data-m="cheng"]'));
+}
+/* 单集时长：总时长÷集数，供选集卡片与播放器展示。为演示"不足25秒"的高亮，
+   把每部剧的最后一集设为短集（真实场景由上传的视频元数据得出）。 */
+function epLen(d) {
+    var mins = parseInt(String(d.total || '').replace(/[^0-9]/g, ''), 10) || 0;
+    var each = Math.max(Math.round(mins * 60 / (d.eps || 1)), 20);
+    return { txt: fmtLen(each), each: each };
+}
+function fmtLen(s) { return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+/* 每集时长列表：以剧ID为种子稳定生成，故意掺入几集不足 25 秒的，
+   便于演示告警（真实场景由上传视频的元数据得出） */
+function epList(d) {
+    var base = epLen(d).each, n = d.eps || 1, out = [], i;
+    var seed = 0, key = String(d.id || d.name || '');
+    for (i = 0; i < key.length; i++) seed = (seed * 31 + key.charCodeAt(i)) % 100000;
+    for (i = 1; i <= n; i++) {
+        var r = (seed + i * 2654435761) % 1000;
+        if (r % 5 === 0) out.push(12 + (r % 13));            /* 约 1/5 的集数不足 25 秒 */
+        else out.push(Math.max(base + (r % 21) - 10, 26));   /* 其余在基准时长上下浮动 */
+    }
+    return out;
+}
+var MIN_SEC = 25;   /* 时长下限：不足则高亮告警 */
+function switchMini(el) {
+    document.querySelectorAll('#panEpi .mini-tab').forEach(function (t) { t.classList.remove('on'); });
+    el.classList.add('on');
+    var m = el.dataset.m;
+    var d = curRow || { eps: 1, total: '1分钟' };
+    var lens = epList(d), n = d.eps || 1;
+    var isFile = m === 'srt' || m === 'audio';   /* 字幕、音轨用文件列表展示，不用播放器 */
+    document.getElementById('epPlayer').classList.toggle('hidden', isFile);
+    document.getElementById('epFiles').classList.toggle('hidden', !isFile);
+    /* 字幕导出按钮只在「字幕srt」页签出现 */
+    document.getElementById('srtExport').classList.toggle('hidden', m !== 'srt');
+    if (isFile) {
+        document.getElementById('efCol').textContent = m === 'srt' ? '字幕文件' : '音轨文件';
+        var rows = '', k;
+        for (k = 1; k <= n; k++) {
+            rows += '<tr><td>第' + k + '集</td><td><span class="file-dl" onclick="dlFile(\'' + m + '\',' + k + ')">下载</span></td></tr>';
+        }
+        document.getElementById('efBody').innerHTML = rows;
+        document.getElementById('epWarn').classList.add('hidden');   /* 文件列表不看时长 */
+        return;
+    }
+    var chips = '', i, bad = 0;
+    for (i = 1; i <= n; i++) {
+        var sec = lens[i - 1], warn = sec < MIN_SEC;
+        if (warn) bad++;
+        chips += '<div class="ep-chip' + (i === 1 ? ' on' : '') + (warn ? ' warn' : '') + '" onclick="pickEp(this,' + i + ')"' +
+            (warn ? ' title="时长不足' + MIN_SEC + '秒"' : '') + '>' +
+            '<b>' + i + '</b><i>' + fmtLen(sec) + '</i></div>';
+    }
+    document.getElementById('epChips').innerHTML = chips;
+    /* 时长告警提示条 */
+    var tip = document.getElementById('epWarn');
+    tip.classList.toggle('hidden', !bad);
+    if (bad) tip.textContent = '⚠ 有 ' + bad + ' 集时长不足 ' + MIN_SEC + ' 秒，已标红，请确认是否符合上架要求';
+    var first = lens[0];
+    var mmss = '00:00 / ' + ('0' + Math.floor(first / 60)).slice(-2) + ':' + ('0' + (first % 60)).slice(-2);
+    document.getElementById('ppTime').textContent = m === 'video' ? mmss + '（无字幕）' : mmss;
+}
+function dlFile(m, k) {
+    toast('第' + k + '集' + (m === 'srt' ? '字幕' : '音轨') + '文件下载中（演示）');
+}
+function pickEp(el, i) {
+    /* 短集靠底色和红字提示即可，不再弹 toast */
+    document.querySelectorAll('#epChips .ep-chip').forEach(function (c) { c.classList.remove('on'); });
+    el.classList.add('on');
+}
+function exportSrt() {
+    var d = curRow || {};
+    toast('已提交「' + (d.name || '本剧') + '」全部 ' + (d.eps || 1) + ' 集字幕导出任务，请到下载中心下载');
+}
+
+/* ================= 商务审核 ================= */
+/* 审核 / 操作记录若从详情页点开，就叠在详情页之上（两者同时出现），关闭时只收自己 */
+function stackOpen(id) {
+    var el = document.getElementById(id);
+    var det = ['panInfo', 'panEpi'].some(function (p) { return !document.getElementById(p).classList.contains('hidden'); });
+    el.classList.toggle('stacked', det);
+    el.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+function stackClose(id) {
+    var el = document.getElementById(id);
+    el.classList.add('hidden');
+    if (el.classList.contains('stacked')) {
+        el.classList.remove('stacked');   /* 底层详情页原样留着 */
+    } else {
+        closePans();
+    }
+}
+function closeBiz() { stackClose('panBiz'); }
+function closeOp() { stackClose('panOp'); }
+function closeLog() { stackClose('panLog'); }
+function openBiz(d) {
+    curRow = d;
+    document.getElementById('abName').textContent = d.name;
+    document.getElementById('abCp1').textContent = d.cp || '';
+    document.getElementById('abPartner').textContent = d.partner || '';
+    document.getElementById('abEps').textContent = d.eps;
+    document.getElementById('b_note').classList.add('hidden');
+    document.querySelectorAll('input[name="b_res"]').forEach(function (r) { r.checked = false; });
+    document.getElementById('b_rating').selectedIndex = 0;
+    document.getElementById('b_guarantee').value = '';
+    document.getElementById('b_cp').selectedIndex = 0;
+    document.querySelector('#b_note textarea').value = '';
+    setRadio('b_urgent', '不加急');   /* 默认不加急 */
+    document.getElementById('bizExtra').classList.add('hidden');   /* 未选审核结果前不展示补充信息 */
+    stackOpen('panBiz');
+}
+document.querySelectorAll('input[name="b_res"]').forEach(function (r) {
+    r.addEventListener('change', function () {
+        document.getElementById('b_note').classList.toggle('hidden', this.value === 'pass');
+        document.getElementById('bizExtra').classList.toggle('hidden', this.value !== 'pass');
+    });
+});
+function doBiz() {
+    var pick = document.querySelector('input[name="b_res"]:checked');
+    if (!pick) return toast('请选择审核结果');
+    var res = pick.value;
+    var d = curRow;
+    if (!d) return;
+    /* 行在数组里的位置算一次；找不到就别动数据（splice(-1,1) 会误删最后一条） */
+    var ix = T.s1.rows.indexOf(d);
+    if (ix < 0) return toast('该短剧已不在「商务待审核」列表中');
+    var urgent = getRadio('b_urgent');
+    if (res === 'pass') {
+        if (document.getElementById('b_rating').selectedIndex === 0) return toast('请选择评级');
+        if (!document.getElementById('b_guarantee').value.trim()) return toast('请输入保底金额');
+        if (document.getElementById('b_cp').selectedIndex === 0) return toast('请选择CP名称');
+        T.s1.rows.splice(ix, 1);
+        T.s2.rows.unshift({ id:d.id, name:d.name, type:d.type, partner:d.partner, cp:document.getElementById('b_cp').value, eps:d.eps, total:d.total, cat:d.cat, payTime:d.payTime, sub:d.sub, note:d.note || '', claim:'', urgent:urgent, firstTime:d.firstTime, first:d.first, status:'待运营审核', advice:'', t1:d.t1, t2:'2026-09-17 11:20:00', rater:'商务员01', rating:document.getElementById('b_rating').value, guarantee:document.getElementById('b_guarantee').value.trim() });
+        T.s3.rows.unshift(T.s2.rows[0]);
+        closePans(); renderColMenu(); renderGrid();
+        toast(urgent === '加急' ? '商务审核通过（加急），已转入「待运营审核」' : '商务审核通过，已转入「待运营审核」');
+    } else if (res === 'back') {
+        T.s1.rows.splice(ix, 1);
+        T.s1b.rows.unshift({ id:d.id, name:d.name, type:d.type, partner:d.partner, cp:d.cp, eps:d.eps, total:d.total, cat:d.cat, payTime:d.payTime, sub:d.sub, note:d.note || '', firstTime:d.firstTime, first:d.first, status:'商务退回', advice:document.querySelector('#b_note textarea').value || '需修改后重新提交', t1:d.t1, t2:'2026-09-17 11:20:00', rater:'商务员01' });
+        closePans(); renderColMenu(); renderGrid(); toast('已退回给合作方');
+    } else {
+        T.s1.rows.splice(ix, 1);
+        T.s2f.rows.unshift({ id:d.id, name:d.name, type:d.type, partner:d.partner, cp:d.cp, eps:d.eps, total:d.total, cat:d.cat, payTime:d.payTime, sub:d.sub, note:d.note || '', firstTime:d.firstTime, first:d.first, status:'不通过', advice:document.querySelector('#b_note textarea').value || '不予合作', t1:d.t1, t2:'2026-09-17 11:20:00', rater:'商务员01' });
+        closePans(); renderColMenu(); renderGrid(); toast('已标记为不通过');
+    }
+}
+
+/* ================= 运营审核 ================= */
+/* 父子剧类型：选「子剧」才需要填父剧，选「父剧」时整项隐藏并清空 */
+function onPsChange() {
+    var sub = document.getElementById('o_ps').value === '子剧';
+    document.getElementById('o_parentItem').classList.toggle('hidden', !sub);
+    if (!sub) document.getElementById('o_parent').value = '';
+}
+function openOp(d) {
+    curRow = d;
+    document.getElementById('opName').textContent = d.name;
+    document.getElementById('opPartner').textContent = d.partner || '—';
+    document.getElementById('opCp1').textContent = d.cp || '—';
+    document.getElementById('opEps').textContent = d.eps;
+    document.getElementById('opSub').textContent = d.sub || '—';
+    document.getElementById('opRating').textContent = d.rating || 'S';
+    document.getElementById('opGuarantee').textContent = d.guarantee || '888';
+    document.getElementById('opCp2').textContent = d.cp || '示例CP04';
+    document.getElementById('o_note').classList.add('hidden');
+    document.querySelectorAll('input[name="o_res"]').forEach(function (r) { r.checked = false; });
+    document.querySelector('#o_note textarea').value = '';
+    document.getElementById('o_biz').selectedIndex = 0;
+    document.getElementById('o_price').value = '0.5';
+    /* 父子剧类型默认「父剧」，父剧项随之隐藏并清空 */
+    document.getElementById('o_ps').selectedIndex = 0;
+    document.getElementById('o_parent').value = '';
+    onPsChange();
+    /* 标记-漫剧细分（非必填）：初始不勾选，由运营自行选择 */
+    document.querySelectorAll('input[name="o_sub"]').forEach(function (c) { c.checked = false; });
+    document.getElementById('opExtra').classList.add('hidden');    /* 未选审核结果前不展示补充信息 */
+    stackOpen('panOp');
+}
+document.querySelectorAll('input[name="o_res"]').forEach(function (r) {
+    r.addEventListener('change', function () {
+        document.getElementById('o_note').classList.toggle('hidden', this.value === 'pass');
+        document.getElementById('opExtra').classList.toggle('hidden', this.value !== 'pass');
+    });
+});
+function doOp() {
+    var pick = document.querySelector('input[name="o_res"]:checked');
+    if (!pick) return toast('请选择审核结果');
+    var res = pick.value;
+    var d = curRow;
+    if (!d) return;
+    /* 同上：位置算一次，找不到就不动数据 */
+    var ix = T[curStage].rows.indexOf(d);
+    if (ix < 0) return toast('该短剧已不在当前列表中');
+    var subs = [];
+    document.querySelectorAll('input[name="o_sub"]:checked').forEach(function (c) { subs.push(c.value); });
+    var subMark = subs.join(' ');
+    if (res === 'pass') {
+        if (document.getElementById('o_biz').selectedIndex === 0) return toast('请选择业务归属');
+        if (!document.getElementById('o_price').value.trim()) return toast('请输入原始价格');
+        /* 子剧必须填父剧；父剧无需填 */
+        if (document.getElementById('o_ps').value === '子剧' && !document.getElementById('o_parent').value.trim()) {
+            return toast('父子剧类型为「子剧」时，请填写父剧');
+        }
+        T[curStage].rows.splice(ix, 1);
+        T.s4.rows.unshift({ name:d.name, type:d.type, id:d.id, partner:d.partner, cp:d.cp, eps:d.eps, total:d.total, cat:d.cat, urgent:d.urgent, first:d.first, status:'审核通过', sync:'未同步', bookId:'', payTime:d.payTime, sub:subMark || d.sub, note:d.note || '', claim:d.claim || ME, t1:'2026-09-17 11:25:00', t2:'2026-09-17 11:25:00', rater:'超级管理员' });
+        closePans(); renderColMenu(); renderGrid(); toast('运营审核通过，已转入「已通过」');
+    } else if (res === 'back') {
+        T[curStage].rows.splice(ix, 1);
+        T.s3b.rows.unshift({ id:d.id, name:d.name, type:d.type, partner:d.partner, cp:d.cp, eps:d.eps, total:d.total, cat:d.cat, urgent:d.urgent, firstTime:d.firstTime, first:d.first, status:'运营退回', advice:document.querySelector('#o_note textarea').value || '需修改后重新提交', payTime:d.payTime, sub:d.sub, note:d.note || '', claim:d.claim || ME, t1:d.t1, t2:'2026-09-17 11:25:00', rater:'超级管理员' });
+        closePans(); renderColMenu(); renderGrid(); toast('已退回商务/合作方');
+    } else {
+        T[curStage].rows.splice(ix, 1);
+        T.s4f.rows.unshift({ id:d.id, name:d.name, type:d.type, partner:d.partner, cp:d.cp, eps:d.eps, total:d.total, cat:d.cat, urgent:d.urgent, first:d.first, status:'不通过', sync:'未同步', bookId:'', advice:document.querySelector('#o_note textarea').value || '不予合作', payTime:d.payTime, sub:d.sub, note:d.note || '', claim:d.claim || ME, t1:d.t1, t2:'2026-09-17 11:25:00', rater:'超级管理员' });
+        closePans(); renderColMenu(); renderGrid(); toast('已标记为不通过');
+    }
+}
+
+/* ================= 同步原始书库 ================= */
+function openSync(i) {
+    curRow = GRID_ROWS[i];
+    var d = curRow;
+    if (!d) return;
+    document.getElementById('syPartner').value = d.partner || '';
+    document.getElementById('syCp').value = d.cp || '';
+    /* 默认：成片同步、无字幕视频进原始片库，字幕与音频不同步 */
+    setRadio('sy_dest', '原始片库');
+    setRadio('sy_srt', '不同步');
+    setRadio('sy_audio', '不同步');
+    setRadio('sy_cp', '同步');
+    document.getElementById('panSync').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+function doSync() {
+    var picks = [];
+    if (getRadio('sy_dest') !== '不同步') picks.push('无字幕视频→' + getRadio('sy_dest'));
+    if (getRadio('sy_srt') === '同步') picks.push('字幕');
+    if (getRadio('sy_audio') === '同步') picks.push('音频');
+    if (getRadio('sy_cp') === '同步') picks.push('成片');
+    if (!picks.length) return toast('请至少选择一项要同步的内容');
+    var d = curRow;
+    if (d) { d.sync = '同步中'; }
+    closePans(); renderGrid();
+    toast('同步任务已提交（' + picks.join('、') + '），状态已置为「同步中」');
+}
+
+/* ================= 通用 ================= */
+function closePans() {
+    document.querySelectorAll('.panel-mask').forEach(function (p) { p.classList.add('hidden'); p.classList.remove('stacked'); });
+    document.body.style.overflow = '';
+}
+function hideAllPanels() { closePans(); }
+function toggleSub(el) {
+    var sub = el.nextElementSibling;
+    while (sub && !sub.classList.contains('side-sub')) sub = sub.nextElementSibling;
+    if (sub) sub.classList.toggle('hidden');
+}
+function toast(msg) {
+    var old = document.querySelector('.toast'); if (old) old.remove();
+    var t = document.createElement('div');
+    t.className = 'toast'; t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function () { t.remove(); }, 1800);
+}
+function coming(name) { toast(name + '（演示入口，未展开）'); }
+
+/* 详情页是否展示「短剧评级」入口：
+   已通过（评完级）不展示；运营待审核须自己认领后才展示 */
+function canRate(d) {
+    if (curStage === 's4') return false;
+    if (curStage === 's3') return d && d.claim === ME;
+    return true;
+}
+/* 短剧评级 = 打开对应的审核面板（商务待审核→商务审核；待运营/运营待审核→运营审核） */
+function openRating() {
+    if (curStage === 's3' && !canRate(curRow)) return toast('请先认领该短剧');
+    if (curStage === 's1') openBiz(curRow);
+    else if (curStage === 's2' || curStage === 's3') openOp(curRow);
+    else coming('该状态下无需评级');
+}
+
+/* ================= 操作记录 ================= */
+function logRows(d) {
+    var L = [];
+    if (curStage === 's1') {
+        L.push({ who: d.partner || '合作方', act: '提审', dt: '', t: d.t1 });
+    } else if (curStage === 's1b' || curStage === 's2f') {
+        L.push({ who: d.partner || '合作方', act: '提审', dt: '', t: d.t1 });
+        L.push({ who: d.rater || '商务员01', act: curStage === 's1b' ? '短剧评级商务退回' : '短剧评级商务不通过', dt: d.advice || '', t: d.t2 });
+    } else if (curStage === 's2' || curStage === 's3') {
+        L.push({ who: d.rater || '商务员01', act: '短剧评级商务通过', dt: '', t: d.t2 });
+    } else if (curStage === 's3b') {
+        L.push({ who: '商务员01', act: '短剧评级商务通过', dt: '', t: d.t1 });
+        L.push({ who: d.rater || '超级管理员', act: '短剧评级运营退回', dt: d.advice || '', t: d.t2 });
+    } else if (curStage === 's4f') {
+        L.push({ who: '商务员01', act: '短剧评级商务通过', dt: '', t: d.t1 });
+        L.push({ who: d.rater || '超级管理员', act: '短剧评级运营不通过', dt: d.advice || '', t: d.t2 });
+    } else {
+        L.push({ who: '商务员01', act: '短剧评级商务通过', dt: '', t: d.t1 });
+        L.push({ who: d.rater || '超级管理员', act: '短剧评级运营通过', dt: '', t: d.t2 });
+    }
+    return L;
+}
+function openLog() {
+    var d = curRow || {};
+    var L = logRows(d);
+    document.getElementById('logBody').innerHTML = L.map(function (r, i) {
+        return '<tr><td>' + (i + 1) + '</td><td>' + r.who + '</td><td>' + r.act + '</td><td class="dt">' + (r.dt || '') + '</td><td>' + (r.t || '') + '</td></tr>';
+    }).join('');
+    document.getElementById('logPager').textContent = '显示第 1 到第 ' + L.length + ' 条记录，总共 ' + L.length + ' 条记录';
+    stackOpen('panLog');
+}
+
+/* ================= CP配置 ================= */
+var CP_ROWS = [
+    { cpid:'30000054', name:'示例CP02', partner:'示例传媒A有限公司', mine:'示例主体A', type:'短剧', intro:'引入', line:'海外', ad:'是', own:'是', ct:'2026-08-20 11:25:01', ut:'2026-09-09 13:53:26', by:'张三', sv:'是', contract:'HT-2026-0054', start:'2026-08-20', end:'2027-08-19' },
+    { cpid:'30000053', name:'示例CP01', partner:'示例传媒A有限公司', mine:'示例主体A', type:'短剧', intro:'引入', line:'海外', ad:'是', own:'是', ct:'2026-08-20 11:19:30', ut:'2026-09-09 13:53:43', by:'张三', sv:'是', contract:'HT-2026-0053', start:'2026-08-20', end:'2027-08-19' },
+    { cpid:'30000050', name:'示例CP11', partner:'示例传媒B有限公司', mine:'DramaBox', type:'短剧', intro:'自制', line:'海外', ad:'是', own:'是', ct:'2026-08-18 19:14:07', ut:'2026-08-18 19:14:17', by:'张三', sv:'否', contract:'HT-2026-0050', start:'2026-08-18', end:'2027-08-17' },
+    { cpid:'30000049', name:'示例CP13', partner:'示例传媒B有限公司', mine:'', type:'短剧', intro:'自制', line:'海外', ad:'是', own:'是', ct:'2026-08-18 19:06:02', ut:'2026-08-18 19:14:25', by:'超级管理员', sv:'是', contract:'', start:'2026-08-18', end:'' },
+    { cpid:'30000045', name:'示例CP12', partner:'示例传媒C有限公司', mine:'', type:'短剧', intro:'引入', line:'大陆 海外', ad:'是', own:'是', ct:'2026-08-18 17:32:39', ut:'2026-08-21 17:04:05', by:'孙七', sv:'是', contract:'HT-2026-0045', start:'2026-08-18', end:'2028-08-17' },
+    { cpid:'30000044', name:'示例CP10', partner:'示例传媒C有限公司', mine:'', type:'短剧', intro:'自制', line:'大陆 繁体 海外', ad:'是', own:'是', ct:'2026-08-17 14:48:34', ut:'2026-08-18 14:40:52', by:'周八', sv:'否', contract:'HT-2026-0044', start:'2026-08-17', end:'2027-08-16' },
+    { cpid:'30000043', name:'示例CP14', partner:'Demo Studio A', mine:'123', type:'短剧', intro:'自制', line:'海外', ad:'是', own:'是', ct:'2026-08-15 16:51:45', ut:'2026-08-15 16:55:36', by:'郑十', sv:'是', contract:'', start:'', end:'' },
+    { cpid:'30000042', name:'示例CP09', partner:'示例传媒D有限公司', mine:'DramaBox', type:'短剧', intro:'自制', line:'海外', ad:'是', own:'是', ct:'2026-08-13 16:43:22', ut:'2026-08-13 16:43:30', by:'钱十一', sv:'是', contract:'HT-2026-0042', start:'2026-08-13', end:'2027-08-12' },
+    { cpid:'30000041', name:'示例CP03', partner:'示例传媒E有限公司分公司', mine:'DramaBox', type:'短剧', intro:'引入', line:'海外', ad:'否', own:'是', ct:'2026-08-12 10:02:18', ut:'2026-08-25 09:31:44', by:'超级管理员', sv:'是', contract:'HT-2026-0041', start:'2026-08-12', end:'2027-08-11' },
+    { cpid:'30000040', name:'示例CP04', partner:'示例传媒E有限公司', mine:'示例主体A', type:'短剧', intro:'引入', line:'大陆 海外', ad:'是', own:'否', ct:'2026-08-11 15:20:40', ut:'2026-08-21 15:13:25', by:'商务员01', sv:'否', contract:'HT-2026-0040', start:'2026-08-11', end:'2027-08-10' },
+    { cpid:'30000038', name:'示例CP05', partner:'示例传媒F有限公司', mine:'DramaBox', type:'短剧', intro:'自制', line:'繁体 海外', ad:'否', own:'是', ct:'2026-08-08 09:11:07', ut:'2026-08-19 18:02:53', by:'超级管理员', sv:'是', contract:'HT-2026-0038', start:'2026-08-08', end:'2027-08-07' },
+    { cpid:'30000035', name:'示例CP06', partner:'示例传媒F有限公司', mine:'DramaBox', type:'短剧', intro:'引入', line:'海外', ad:'是', own:'是', ct:'2026-08-02 09:15:22', ut:'2026-08-30 11:04:18', by:'卫十四', sv:'是', contract:'HT-2026-0035', start:'2026-08-02', end:'2027-08-01' },
+    { cpid:'30000034', name:'示例CP07', partner:'示例传媒F有限公司', mine:'示例主体A', type:'短剧', intro:'自制', line:'大陆 海外', ad:'否', own:'是', ct:'2026-07-28 16:40:05', ut:'2026-08-29 12:16:43', by:'蒋十五', sv:'否', contract:'HT-2026-0034', start:'2026-07-28', end:'2027-07-27' },
+    { cpid:'30000036', name:'示例CP08', partner:'示例传媒G有限公司', mine:'', type:'短剧', intro:'引入', line:'海外', ad:'是', own:'是', ct:'2026-08-04 16:07:31', ut:'2026-08-24 16:35:12', by:'超级管理员', sv:'是', contract:'', start:'2026-08-04', end:'' }
+];
+var cpView = CP_ROWS.slice(), cpKind = '短剧';
+function goPage(p) {
+    var cp = p === 'cp', acct = p === 'acct', audit = !cp && !acct;
+    document.getElementById('pageAudit').classList.toggle('hidden', !audit);
+    document.getElementById('pageCp').classList.toggle('hidden', !cp);
+    document.getElementById('pageAcct').classList.toggle('hidden', !acct);
+    document.getElementById('navAudit').classList.toggle('active', audit);
+    document.getElementById('navCp').classList.toggle('active', cp);
+    document.getElementById('navAcct').classList.toggle('active', acct);
+    /* 顶部标签：点过一次就常驻，当前页高亮 */
+    if (cp) document.getElementById('tabCp').classList.remove('hidden');
+    if (acct) document.getElementById('tabAcct').classList.remove('hidden');
+    document.getElementById('tabCp').classList.toggle('on', cp);
+    document.getElementById('tabAcct').classList.toggle('on', acct);
+    document.getElementById('tabAudit').classList.toggle('on', audit);
+    if (cp) cpRender();
+    if (acct) acctRender();
+    window.scrollTo(0, 0);
+}
+function cpSubTab(el, kind) {
+    document.querySelectorAll('#pageCp .sub-tab').forEach(function (t) { t.classList.remove('on'); });
+    el.classList.add('on');
+    cpKind = kind;
+    cpView = CP_ROWS.filter(function (r) { return kind === '短剧' ? true : false; });
+    cpRender();
+}
+function cpQuery() {
+    var id = document.getElementById('cq_id').value.trim(), nm = document.getElementById('cq_name').value.trim(),
+        intro = document.getElementById('cq_intro').value, line = document.getElementById('cq_line').value,
+        ad = document.getElementById('cq_ad').value;
+    cpView = CP_ROWS.filter(function (r) {
+        if (cpKind !== '短剧') return false;
+        if (id && r.cpid.indexOf(id) < 0) return false;
+        if (nm && r.name.indexOf(nm) < 0) return false;
+        if (intro !== '全部' && r.intro !== intro) return false;
+        if (line !== '全部' && r.line.indexOf(line) < 0) return false;
+        if (ad !== '全部' && r.ad !== ad) return false;
+        return true;
+    });
+    cpRender();
+    toast('共查询到 ' + cpView.length + ' 条记录');
+}
+function cpClear() {
+    document.getElementById('cq_id').value = '';
+    document.getElementById('cq_name').value = '';
+    document.getElementById('cq_intro').selectedIndex = 0;
+    document.getElementById('cq_line').selectedIndex = 0;
+    document.getElementById('cq_ad').selectedIndex = 0;
+    cpView = cpKind === '短剧' ? CP_ROWS.slice() : [];
+    cpRender();
+    toast('已清除搜索条件');
+}
+function cpRender() {
+    document.getElementById('cpBody').innerHTML = cpView.map(function (r, i) {
+        return '<tr><td>' + (i + 1) + '</td><td>' + r.cpid + '</td><td>' + r.name + '</td><td>' + r.partner + '</td>' +
+            '<td>' + r.mine + '</td><td>' + r.type + '</td><td>' + r.intro + '</td><td>' + r.line + '</td>' +
+            '<td>' + r.ad + '</td><td>' + r.own + '</td><td>' + r.ct + '</td><td>' + r.ut + '</td><td>' + r.by + '</td>' +
+            '<td><div class="cp-ops">' +
+            '<div class="btn teal" onclick="coming(\'分产品线配置\')">分产品线配置</div>' +
+            '<div class="btn teal" onclick="openCpForm(' + i + ')">修改</div>' +
+            '<div class="btn teal" onclick="coming(\'查看短剧列表\')">查看短剧列表</div>' +
+            '<div class="btn rose" onclick="cpDel(' + i + ')">删除</div>' +
+            '</div></td></tr>';
+    }).join('') || '<tr><td colspan="14" style="padding:40px 0;color:#aaa">暂无数据</td></tr>';
+    document.getElementById('cpPager').textContent = '显示第 1 到第 ' + cpView.length + ' 条记录，总共 ' + cpView.length + ' 条记录';
+}
+function cpDel(i) {
+    var r = cpView[i];
+    if (!confirm('确认删除 CP「' + r.name + '」吗？')) return;
+    CP_ROWS.splice(CP_ROWS.indexOf(r), 1);
+    cpView.splice(i, 1);
+    cpRender();
+    toast('已删除');
+}
+
+/* ---------- 添加 / 修改 cp配置 ---------- */
+var cfEdit = null;   /* null = 添加，否则为正在修改的行对象 */
+function setRadio(name, val) {
+    var hit = false;
+    document.querySelectorAll('input[name="' + name + '"]').forEach(function (r) {
+        r.checked = r.value === val;
+        if (r.checked) hit = true;
+    });
+    if (!hit) { var first = document.querySelector('input[name="' + name + '"]'); if (first) first.checked = true; }
+}
+function getRadio(name) {
+    var r = document.querySelector('input[name="' + name + '"]:checked');
+    return r ? r.value : '';
+}
+/* 合作方名称：可输入关键字搜索的下拉（供应商很多，纯下拉不好找） */
+var PARTNERS = [
+    '示例传媒A有限公司', '示例传媒B有限公司', '示例传媒C有限公司',
+    'Demo Studio A', '示例传媒D有限公司', '示例传媒E有限公司分公司',
+    '示例传媒E有限公司', '示例传媒F有限公司', '示例传媒G有限公司',
+    '示例传媒H有限公司', '示例传媒I有限公司', '示例传媒J有限公司',
+    '示例传媒K有限公司', '示例传媒L有限公司', '示例传媒M有限公司',
+    '示例传媒N有限公司', '示例传媒O有限公司', '示例传媒P有限公司',
+    'Demo Studio B', 'Demo Studio C'
+];
+function allPartners() {
+    var seen = {}, out = [];
+    PARTNERS.concat(CP_ROWS.map(function (r) { return r.partner; })).forEach(function (p) {
+        if (p && !seen[p]) { seen[p] = 1; out.push(p); }
+    });
+    return out;
+}
+function pnRender(kw) {
+    var cur = document.getElementById('cf_partner').value.trim();
+    var list = allPartners().filter(function (p) { return !kw || p.toLowerCase().indexOf(kw.toLowerCase()) >= 0; });
+    var box = document.getElementById('cf_partnerDrop');
+    if (!list.length) { box.innerHTML = '<div class="cf-empty">无匹配的合作方</div>'; return; }
+    box.innerHTML = list.map(function (p) {
+        var txt = kw ? p.replace(new RegExp('(' + kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<em>$1</em>') : p;
+        return '<div class="cf-opt' + (p === cur ? ' on' : '') + '" onclick="pnPick(this)" data-v="' + p + '">' + txt + '</div>';
+    }).join('');
+}
+function pnOpen() { pnRender(''); document.getElementById('cf_partnerDrop').classList.remove('hidden'); }
+function pnToggle() {
+    var d = document.getElementById('cf_partnerDrop');
+    if (d.classList.contains('hidden')) pnOpen(); else d.classList.add('hidden');
+}
+function pnFilter() { pnRender(document.getElementById('cf_partner').value.trim()); document.getElementById('cf_partnerDrop').classList.remove('hidden'); }
+function pnPick(el) {
+    document.getElementById('cf_partner').value = el.dataset.v;
+    document.getElementById('cf_partnerDrop').classList.add('hidden');
+}
+function pnClose() { var d = document.getElementById('cf_partnerDrop'); if (d) d.classList.add('hidden'); }
+
+/* ---------- 商务对接人：库中所有人，控件形式同合作方名称 ---------- */
+var STAFF = [
+    '超级管理员', '张三', '商务员01', '商务员02', '李四', '王五',
+    '赵六', '孙七', '周八', '吴九', '郑十', '钱十一',
+    '冯十二', '陈十三', '卫十四', '蒋十五'
+];
+function allStaff() {
+    var seen = {}, out = [];
+    STAFF.concat(CP_ROWS.map(function (r) { return r.by; })).forEach(function (p) {
+        if (p && !seen[p]) { seen[p] = 1; out.push(p); }
+    });
+    return out;
+}
+/* 商务对接人的唯一来源 = 版权合作平台-账号管理。
+   按「合作方名称」反查该合作方的平台账号，取账号上的商务对接人。与 CP 配置无关。 */
+function acctBizOwner(partnerName) {
+    if (!partnerName) return '';
+    for (var i = 0; i < ACCT_ROWS.length; i++) {
+        if (ACCT_ROWS[i].partner === partnerName) return ACCT_ROWS[i].owner || '';
+    }
+    return '';
+}
+/* 短剧行的商务对接人。列显示与筛选必须都走这个函数，否则会出现「列里有人、筛选却查不到」的错位 */
+function rowBizOwner(r) { return acctBizOwner(r.partner); }
+/* 商务对接人检索下拉：选项从账号表实时生成，改了账号的对接人后不会和数据脱节 */
+function fillBizOwnerOpts() {
+    var sel = document.getElementById('q_bizOwner');
+    var keep = sel.value;
+    var seen = {}, list = [];
+    ACCT_ROWS.forEach(function (r) {
+        if (r.owner && !seen[r.owner]) { seen[r.owner] = 1; list.push(r.owner); }
+    });
+    sel.innerHTML = '<option>-全部-</option><option>未分配</option>' +
+        list.map(function (o) { return '<option>' + o + '</option>'; }).join('');
+    /* 重建后尽量保留原选项，避免搜索条件被悄悄重置 */
+    sel.value = (keep === '未分配' || list.indexOf(keep) >= 0) ? keep : '-全部-';
+}
+
+/* ================= 版权合作平台-账号管理 ================= */
+var ACCT_NOW = '2026-09-22 10:30:00';      /* 演示用“当前时间” */
+var ACCT_MONTH = ACCT_NOW.slice(0, 7);     /* 本月，用于统计卡 */
+var ACCT_ROWS = [
+    { phone:'', acct:'dbpartner001', partner:'示例传媒A有限公司', cpids:'30000054,30000053,3001', kind:'企业', auth:'认证通过', ct:'2026-09-09 13:54:26', owner:'超级管理员', log:[] },
+    { phone:'13800000001', acct:'dbpartner002', partner:'示例传媒Q有限公司', cpids:'', kind:'企业', auth:'认证通过', ct:'2026-09-02 16:27:00', owner:'商务员01', log:[] },
+    { phone:'', acct:'dbpartner003', partner:'示例传媒R有限公司', cpids:'30000032', kind:'企业', auth:'认证通过', ct:'2026-09-01 17:05:48', owner:'赵六', log:[] },
+    { phone:'', acct:'dbpartner004', partner:'示例传媒S有限公司', cpids:'', kind:'企业', auth:'认证通过', ct:'2026-09-01 17:05:14', owner:'冯十二', log:[] },
+    { phone:'13800000002', acct:'dbpartner005', partner:'示例传媒F有限公司', cpids:'30000033,30000034', kind:'企业', auth:'认证通过', ct:'2026-08-29 11:10:22', owner:'卫十四', log:[] },
+    { phone:'', acct:'dbpartner006', partner:'示例传媒T有限公司', cpids:'', kind:'企业', auth:'认证通过', ct:'2026-08-21 17:05:08', owner:'李四', log:[] },
+    { phone:'', acct:'dbpartner007', partner:'示例传媒C有限公司', cpids:'30000045,30000044', kind:'企业', auth:'认证通过', ct:'2026-08-21 16:04:48', owner:'王五', log:[] },
+    { phone:'', acct:'dbpartner008', partner:'示例传媒B有限公司', cpids:'', kind:'企业', auth:'认证通过', ct:'2026-08-21 15:53:53', owner:'陈十三', log:[] },
+    { phone:'13800000004', acct:'dbpartner009', partner:'示例传媒E有限公司分公司', cpids:'', kind:'企业', auth:'认证通过', ct:'2026-08-20 11:28:59', owner:'超级管理员', log:[] },
+    { phone:'13800000003', acct:'dbpartner010', partner:'示例传媒G有限公司', cpids:'21341', kind:'企业', auth:'认证通过', ct:'2026-08-04 16:07:31', owner:'蒋十五', log:[] },
+    /* 以下为提交过短剧、但此前账号表里缺失的合作方。注册时间放在 8 月，避免影响「本月新增」的统计卡 */
+    { phone:'13800000005', acct:'dbpartner011', partner:'示例传媒O有限公司', cpids:'30000048', kind:'企业', auth:'认证通过', ct:'2026-08-18 09:42:15', owner:'郑十', log:[] },
+    { phone:'', acct:'dbpartner012', partner:'示例传媒E有限公司', cpids:'30000040', kind:'企业', auth:'认证通过', ct:'2026-08-15 14:20:33', owner:'赵六', log:[] },
+    { phone:'13800000006', acct:'dbpartner013', partner:'示例传媒H有限公司', cpids:'', kind:'企业', auth:'认证通过', ct:'2026-08-12 16:05:47', owner:'孙七', log:[] },
+    { phone:'', acct:'dbpartner014', partner:'示例传媒I有限公司', cpids:'30000052', kind:'企业', auth:'认证通过', ct:'2026-08-08 10:33:20', owner:'周八', log:[] }
+];
+var acctView = ACCT_ROWS.slice();
+var acctEdit = null;      /* 当前正在改对接人 / 看操作记录的那一行 */
+
+/* 统计卡按数据实时算，改了数据不会和卡片对不上 */
+function acctStats() {
+    var all = ACCT_ROWS, mon = all.filter(function (r) { return r.ct.slice(0, 7) === ACCT_MONTH; });
+    var cnt = function (list, k) { return list.filter(function (r) { return r.kind === k; }).length; };
+    var cards = [
+        ['总账号数', all.length], ['企业总账号', cnt(all, '企业')], ['个人总账号', cnt(all, '个人')],
+        ['本月新增账号', mon.length], ['本月新增企业', cnt(mon, '企业')], ['本月新增个人', cnt(mon, '个人')]
+    ];
+    document.getElementById('acctStats').innerHTML = cards.map(function (c) {
+        return '<div class="stat-card"><span class="sc-l">' + c[0] + '</span><div class="sc-n">' + c[1] + '</div></div>';
+    }).join('');
+}
+function acctRender() {
+    document.getElementById('acctBody').innerHTML = acctView.map(function (r) {
+        var ix = ACCT_ROWS.indexOf(r);   /* 按原始下标定位，筛选后改对接人才不会串行 */
+        return '<tr><td><input type="checkbox" class="cbx"></td>' +
+            '<td>' + (r.phone || '-') + '</td><td>' + r.acct + '</td>' +
+            '<td>' + (r.partner || '-') + '</td><td>' + (r.cpids || '-') + '</td>' +
+            '<td>' + r.kind + '</td><td>' + r.auth + '</td><td>' + r.ct + '</td>' +
+            '<td>' + (r.owner || '—') + '</td>' +
+            '<td><div class="cp-ops">' +
+            '<div class="btn teal" onclick="coming(\'查看合作方\')">查看合作方</div>' +
+            '<div class="btn teal" onclick="coming(\'变更合作方\')">变更合作方</div>' +
+            '<div class="btn teal" onclick="openAcctOwner(' + ix + ')">修改对接人</div>' +
+            '<div class="btn amber" onclick="coming(\'重置密码\')">重置密码</div>' +
+            '<div class="btn gray" onclick="openAcctLog(' + ix + ')">操作记录</div>' +
+            '</div></td></tr>';
+    }).join('') || '<tr><td colspan="10" style="padding:40px 0;color:#aaa">没有找到匹配的记录</td></tr>';
+    document.getElementById('acctPager').textContent =
+        '显示第 1 到第 ' + acctView.length + ' 条记录，总共 ' + acctView.length + ' 条记录';
+    acctStats();
+}
+function acctCkAll(box) {
+    document.querySelectorAll('#acctBody .cbx').forEach(function (c) { c.checked = box.checked; });
+}
+function acctQuery() {
+    var id = document.getElementById('aq_id').value.trim(),
+        phone = document.getElementById('aq_phone').value.trim(),
+        partner = document.getElementById('aq_partner').value.trim(),
+        cpid = document.getElementById('aq_cpid').value.trim(),
+        kind = document.getElementById('aq_kind').value,
+        auth = document.getElementById('aq_auth').value;
+    acctView = ACCT_ROWS.filter(function (r) {
+        if (id && r.acct.toLowerCase().indexOf(id.toLowerCase()) < 0) return false;
+        if (phone && (r.phone || '').indexOf(phone) < 0) return false;
+        if (partner && (r.partner || '').indexOf(partner) < 0) return false;
+        if (cpid && (r.cpids || '').indexOf(cpid) < 0) return false;
+        if (kind !== '全部' && r.kind !== kind) return false;
+        if (auth !== '全部' && r.auth !== auth) return false;
+        return true;
+    });
+    acctRender();
+    toast('筛选出 ' + acctView.length + ' 条');
+}
+function acctClear() {
+    ['aq_id','aq_phone','aq_partner','aq_cpid'].forEach(function (k) { document.getElementById(k).value = ''; });
+    ['aq_kind','aq_auth'].forEach(function (k) { document.getElementById(k).selectedIndex = 0; });
+    acctView = ACCT_ROWS.slice();
+    acctRender();
+    toast('已清除搜索条件');
+}
+
+/* ---------- 修改对接人：可搜索下拉，控件形式同 CP 配置里的商务对接人 ---------- */
+function apRender(kw) {
+    var cur = document.getElementById('ao_owner').value.trim();
+    var list = allStaff().filter(function (p) { return !kw || p.toLowerCase().indexOf(kw.toLowerCase()) >= 0; });
+    var box = document.getElementById('ao_ownerDrop');
+    if (!list.length) { box.innerHTML = '<div class="cf-empty">无匹配的人员</div>'; return; }
+    box.innerHTML = list.map(function (p) {
+        var txt = kw ? p.replace(new RegExp('(' + kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<em>$1</em>') : p;
+        return '<div class="cf-opt' + (p === cur ? ' on' : '') + '" onclick="apPick(this)" data-v="' + p + '">' + txt + '</div>';
+    }).join('');
+}
+function apOpen() { apRender(''); document.getElementById('ao_ownerDrop').classList.remove('hidden'); }
+function apToggle() {
+    var d = document.getElementById('ao_ownerDrop');
+    if (d.classList.contains('hidden')) apOpen(); else d.classList.add('hidden');
+}
+function apFilter() { apRender(document.getElementById('ao_owner').value.trim()); document.getElementById('ao_ownerDrop').classList.remove('hidden'); }
+function apPick(el) {
+    document.getElementById('ao_owner').value = el.dataset.v;
+    document.getElementById('ao_ownerDrop').classList.add('hidden');
+}
+function apClose() { var d = document.getElementById('ao_ownerDrop'); if (d) d.classList.add('hidden'); }
+
+function openAcctOwner(ix) {
+    acctEdit = ACCT_ROWS[ix];
+    if (!acctEdit) return;
+    document.getElementById('ao_acct').textContent = acctEdit.acct;
+    document.getElementById('ao_partner').textContent = acctEdit.partner || '—';
+    document.getElementById('ao_cur').textContent = acctEdit.owner || '未分配';
+    document.getElementById('ao_owner').value = acctEdit.owner || '';
+    apClose();
+    document.getElementById('panAcctOwner').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+function closeAcctOwner() {
+    document.getElementById('panAcctOwner').classList.add('hidden');
+    apClose();
+    document.body.style.overflow = '';
+}
+function doAcctOwner() {
+    if (!acctEdit) return;
+    var to = document.getElementById('ao_owner').value.trim();
+    if (!to) return toast('请选择商务对接人');
+    if (allStaff().indexOf(to) < 0) return toast('商务对接人需从下拉列表中选择');
+    var from = acctEdit.owner || '';
+    if (to === from) { closeAcctOwner(); return toast('商务对接人未变更'); }
+    acctEdit.owner = to;
+    /* 变更写入操作记录，操作内容为「原值→新值」 */
+    acctEdit.log = acctEdit.log || [];
+    acctEdit.log.unshift({ who: ME, t: ACCT_NOW, item: '修改对接人', content: (from || '未分配') + ' → ' + to });
+    closeAcctOwner();
+    acctRender();
+    toast('「' + acctEdit.acct + '」商务对接人已变更为 ' + to);
+}
+
+/* ---------- 操作记录 ---------- */
+function openAcctLog(ix) {
+    if (ix !== undefined) acctEdit = ACCT_ROWS[ix];
+    if (!acctEdit) return;
+    var L = acctEdit.log || [];
+    document.getElementById('alAcct').textContent = acctEdit.acct;
+    document.getElementById('alBody').innerHTML = L.length
+        ? L.map(function (r) {
+            return '<tr><td><input type="checkbox" class="cbx"></td><td>' + r.who + '</td><td>' + r.t + '</td>' +
+                '<td>' + r.item + '</td><td>' + esc(r.content) + '</td></tr>';
+        }).join('')
+        : '<tr><td colspan="5" style="padding:36px 0;color:#aaa">没有找到匹配的记录</td></tr>';
+    document.getElementById('alPager').textContent = L.length
+        ? '显示第 1 到第 ' + L.length + ' 条记录，总共 ' + L.length + ' 条记录' : '';
+    document.getElementById('panAcctLog').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+function alCkAll(box) {
+    document.querySelectorAll('#alBody .cbx').forEach(function (c) { c.checked = box.checked; });
+}
+function closeAcctLog() {
+    document.getElementById('panAcctLog').classList.add('hidden');
+    document.body.style.overflow = '';
+}
+function openCpForm(i) {
+    cfEdit = i === undefined ? null : cpView[i];
+    document.getElementById('cfTitle').textContent = cfEdit ? '修改cp配置' : '添加cp配置';
+    var d = cfEdit || {};
+    document.getElementById('cf_name').value = d.name || '';
+    document.getElementById('cf_partner').value = d.partner || '';
+    pnClose();
+    document.getElementById('cf_mine').value = d.mine || '';
+    document.getElementById('cf_contract').value = d.contract || '';
+    document.getElementById('cf_start').value = d.start || '';
+    document.getElementById('cf_end').value = d.end || '';
+    setRadio('cf_own', d.own || '是');
+    setRadio('cf_type', d.type || '短剧');
+    setRadio('cf_intro', d.intro || '自制');
+    setRadio('cf_sv', d.sv || '是');
+    setRadio('cf_ad', d.ad || '是');
+    var lines = (d.line || '').split(' ');
+    document.querySelectorAll('input[name="cf_line"]').forEach(function (c) { c.checked = lines.indexOf(c.value) >= 0; });
+    document.getElementById('panCpForm').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+function closeCpForm() {
+    document.getElementById('panCpForm').classList.add('hidden');
+    document.body.style.overflow = '';
+    cfEdit = null;
+}
+function doCpForm() {
+    var name = document.getElementById('cf_name').value.trim();
+    if (!name) return toast('请输入cp名称');
+    var partner = document.getElementById('cf_partner').value.trim();
+    if (!partner) return toast('请选择合作方名称');
+    if (allPartners().indexOf(partner) < 0) return toast('合作方名称需从下拉列表中选择');
+    var lines = [];
+    document.querySelectorAll('input[name="cf_line"]:checked').forEach(function (c) { lines.push(c.value); });
+    if (!lines.length) return toast('请勾选产品线类型');
+    var now = '2026-09-18 10:30:00';
+    var vals = {
+        name: name, partner: partner,
+        mine: document.getElementById('cf_mine').value.trim(),
+        contract: document.getElementById('cf_contract').value.trim(),
+        own: getRadio('cf_own'), type: getRadio('cf_type'), intro: getRadio('cf_intro'),
+        sv: getRadio('cf_sv'), ad: getRadio('cf_ad'), line: lines.join(' '),
+        start: document.getElementById('cf_start').value, end: document.getElementById('cf_end').value
+    };
+    if (cfEdit) {
+        Object.keys(vals).forEach(function (k) { cfEdit[k] = vals[k]; });
+        cfEdit.ut = now;
+        closeCpForm(); cpRender();
+        toast('已保存修改');
+    } else {
+        var maxId = 30000000;
+        CP_ROWS.forEach(function (r) { maxId = Math.max(maxId, parseInt(r.cpid, 10) || 0); });
+        vals.cpid = String(maxId + 1);
+        vals.ct = now; vals.ut = now; vals.by = '超级管理员';
+        CP_ROWS.unshift(vals);
+        cpView = cpKind === '短剧' ? CP_ROWS.slice() : cpView;
+        closeCpForm(); cpRender(); fillBizOwnerOpts(); toast('已添加 CP「' + name + '」');
+    }
+}
+
+/* 初始化 */
+fillBizOwnerOpts();   /* 先填商务对接人选项，switchStage 里的 resetFilters 才有完整的下拉可复位 */
+switchStage('s1');
+renderColMenu();
+</script>
+</body>
+</html>
