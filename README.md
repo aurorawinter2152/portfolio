@@ -1,6 +1,7 @@
 # portfolio
 
-一、DEMO
+**一、DEMO**
+
 **查看链接：**
 https://aurorawinter2152.github.io/portfolio/
 
@@ -10,7 +11,10 @@ https://aurorawinter2152.github.io/portfolio/短剧审核中台原型-demo-v3.ht
 
 **特殊说明：**“智慧体育馆”为小程序形式，且受合作方要求暂时无法对外开放使用，故提供“智慧体育馆小程序”的demo视频操作流程，作为参考作品
 
-二、理财管理网站（开源，本地部署）
+
+
+**二、理财管理网站（开源，本地部署）**
+
 **开源链接：**
 https://github.com/aurorawinter2152/moneymanagement
 
