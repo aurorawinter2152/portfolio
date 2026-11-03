@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>理财看板 · 登录</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f2f4f7; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+    .card { background: #fff; border-radius: 18px; box-shadow: 0 10px 30px rgba(16,24,40,.08); padding: 28px 22px; width: 100%; max-width: 340px; text-align: center; }
+    h1 { font-size: 19px; margin: 0 0 6px; color: #181b21; }
+    p { color: #8a9099; font-size: 13px; margin: 0 0 18px; }
+    input { width: 100%; padding: 13px; border: 1px solid #e2e5ea; border-radius: 12px; font-size: 16px; background: #fbfbfc; outline: none; }
+    input:focus { border-color: #2b6df6; background: #fff; box-shadow: 0 0 0 3px rgba(43,109,246,.12); }
+    button { width: 100%; margin-top: 14px; padding: 13px; border: none; border-radius: 12px; background: #2b6df6; color: #fff; font-size: 16px; font-weight: 600; }
+    button:active { transform: scale(.99); }
+    .err { color: #b32a22; font-size: 13px; margin-top: 10px; min-height: 18px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>理财看板</h1>
+    <p>请输入访问密码</p>
+    <form id="f">
+      <input id="pwd" type="password" autocomplete="current-password" placeholder="密码" autofocus />
+      <div class="err" id="err"></div>
+      <button type="submit">进入</button>
+    </form>
+  </div>
+  <script>
+    const f = document.getElementById("f");
+    const pwd = document.getElementById("pwd");
+    const err = document.getElementById("err");
+    f.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      err.textContent = "";
+      try {
+        const r = await fetch("/api/login", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ password: pwd.value })
+        });
+        if (r.ok) location.replace("/");
+        else { err.textContent = "密码不正确"; pwd.select(); }
+      } catch {
+        err.textContent = "网络异常，请重试";
+      }
+    });
+  </script>
+</body>
+</html>
